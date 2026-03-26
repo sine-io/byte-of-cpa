@@ -1,7 +1,9 @@
 package handlers_test
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,9 +12,30 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/api"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/api/handlers"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/translator"
 )
+
+type stubRuntime struct {
+	supportsModel func(model string) bool
+	execute       func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error)
+}
+
+func (s *stubRuntime) SupportsModel(model string) bool {
+	if s.supportsModel == nil {
+		return false
+	}
+	return s.supportsModel(model)
+}
+
+func (s *stubRuntime) Execute(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
+	if s.execute == nil {
+		return nil, nil
+	}
+	return s.execute(ctx, model, openAIRequest)
+}
 
 func TestChatCompletionsSupportedModelStillReturnsStableAPIError(t *testing.T) {
 	t.Parallel()
@@ -372,6 +395,95 @@ func TestChatCompletionsRejectsUnsupportedModelBeforeUpstreamHandling(t *testing
 	}
 
 	assertOpenAIError(t, rec, "invalid_request_error", `model "claude-3-5-haiku" is not available`)
+}
+
+func TestChatCompletionsRuntimeValidationErrorsReturnInvalidRequestError(t *testing.T) {
+	t.Parallel()
+
+	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
+		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
+			return nil, &translator.ValidationError{
+				StatusCode: http.StatusBadRequest,
+				Message:    "tool_choice is not supported",
+			}
+		},
+	})
+	mux := http.NewServeMux()
+	openAI.RegisterRoutes(mux)
+	handler := api.APIKeyMiddleware([]string{"dev-key"}, mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{"model":"claude-3-5-haiku","messages":[]}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for runtime validation error, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	assertOpenAIError(t, rec, "invalid_request_error", "tool_choice is not supported")
+}
+
+func TestChatCompletionsRuntimeErrorsNormalizeToStableAPIError(t *testing.T) {
+	t.Parallel()
+
+	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
+		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
+			return nil, errors.New("dial tcp 127.0.0.1:443: connection refused")
+		},
+	})
+	mux := http.NewServeMux()
+	openAI.RegisterRoutes(mux)
+	handler := api.APIKeyMiddleware([]string{"dev-key"}, mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{"model":"claude-3-5-haiku","messages":[]}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 for normalized runtime error, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	assertOpenAIError(t, rec, "api_error", "upstream provider request failed")
+	if strings.Contains(rec.Body.String(), "connection refused") {
+		t.Fatalf("expected upstream details to be hidden, got %s", rec.Body.String())
+	}
+}
+
+func TestChatCompletionsRuntimeResultsDefaultContentTypeToApplicationJSON(t *testing.T) {
+	t.Parallel()
+
+	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
+		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
+			return &auth.Result{
+				StatusCode: http.StatusOK,
+				Body:       []byte(`{"id":"chatcmpl_1","object":"chat.completion","model":"claude-3-5-haiku","choices":[]}`),
+			}, nil
+		},
+	})
+	mux := http.NewServeMux()
+	openAI.RegisterRoutes(mux)
+	handler := api.APIKeyMiddleware([]string{"dev-key"}, mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{"model":"claude-3-5-haiku","messages":[]}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for runtime result, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if got := rec.Header().Get("Content-Type"); !strings.Contains(got, "application/json") {
+		t.Fatalf("expected default application/json content type, got %q", got)
+	}
 }
 
 func performAuthorizedRequest(t *testing.T, modelRegistry *registry.ModelRegistry, method, path, body string) *httptest.ResponseRecorder {

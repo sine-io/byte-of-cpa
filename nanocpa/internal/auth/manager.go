@@ -18,6 +18,10 @@ type Manager struct {
 	selector  Selector
 }
 
+func modelNotAvailableError(model string) error {
+	return fmt.Errorf("model %q is not available", model)
+}
+
 func NewManager(modelRegistry *registry.ModelRegistry, selector Selector) *Manager {
 	if selector == nil {
 		selector = NewRoundRobinSelector()
@@ -77,7 +81,7 @@ func (m *Manager) Candidates(model string) ([]*Auth, error) {
 
 	providers := m.registry.GetModelProviders(model)
 	if len(providers) == 0 {
-		return nil, fmt.Errorf("no provider supports model %q", model)
+		return nil, modelNotAvailableError(model)
 	}
 
 	providerSet := make(map[string]struct{}, len(providers))

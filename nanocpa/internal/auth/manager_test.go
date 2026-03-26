@@ -153,6 +153,94 @@ func TestManager_SelectUsesDefaultRoundRobinSelector(t *testing.T) {
 	}
 }
 
+func TestManager_SelectKeepsRoundRobinStateIsolatedPerModel(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := registry.NewModelRegistry()
+	modelRegistry.RegisterClient("claude-1", "claude", []registry.ModelInfo{{ID: "claude-3-5-haiku"}, {ID: "claude-3-7-sonnet"}})
+	modelRegistry.RegisterClient("claude-2", "claude", []registry.ModelInfo{{ID: "claude-3-5-haiku"}, {ID: "claude-3-7-sonnet"}})
+
+	mgr := auth.NewManager(modelRegistry, nil)
+	mgr.RegisterAuth(&auth.Auth{ID: "claude-2", Provider: "claude", Status: auth.StatusActive})
+	mgr.RegisterAuth(&auth.Auth{ID: "claude-1", Provider: "claude", Status: auth.StatusActive})
+
+	firstHaiku, err := mgr.Select("claude-3-5-haiku")
+	if err != nil {
+		t.Fatalf("first haiku select: %v", err)
+	}
+	secondHaiku, err := mgr.Select("claude-3-5-haiku")
+	if err != nil {
+		t.Fatalf("second haiku select: %v", err)
+	}
+	firstSonnet, err := mgr.Select("claude-3-7-sonnet")
+	if err != nil {
+		t.Fatalf("first sonnet select: %v", err)
+	}
+
+	if firstHaiku.ID != "claude-1" {
+		t.Fatalf("expected first haiku selection to start at claude-1, got %q", firstHaiku.ID)
+	}
+	if secondHaiku.ID != "claude-2" {
+		t.Fatalf("expected second haiku selection to rotate to claude-2, got %q", secondHaiku.ID)
+	}
+	if firstSonnet.ID != "claude-1" {
+		t.Fatalf("expected sonnet selection to keep an independent round-robin cursor, got %q", firstSonnet.ID)
+	}
+}
+
+func TestManager_SelectReturnsCleanErrorForUnsupportedModel(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := registry.NewModelRegistry()
+	modelRegistry.RegisterClient("openai-1", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+
+	mgr := auth.NewManager(modelRegistry, nil)
+	mgr.RegisterAuth(&auth.Auth{ID: "openai-1", Provider: "openai", Status: auth.StatusActive})
+
+	selected, err := mgr.Select("claude-3-5-haiku")
+	if err == nil {
+		t.Fatal("expected unsupported model error")
+	}
+	if selected != nil {
+		t.Fatalf("expected no selected auth for unsupported model, got %#v", selected)
+	}
+	if !strings.Contains(err.Error(), `model "claude-3-5-haiku" is not available`) {
+		t.Fatalf("expected clean unsupported model error, got %v", err)
+	}
+}
+
+func TestManager_SelectSkipsDisabledAndCooldownAuths(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := registry.NewModelRegistry()
+	modelRegistry.RegisterClient("auth-disabled", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+	modelRegistry.RegisterClient("auth-cooldown", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+	modelRegistry.RegisterClient("auth-active-1", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+	modelRegistry.RegisterClient("auth-active-2", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+
+	mgr := auth.NewManager(modelRegistry, nil)
+	mgr.RegisterAuth(&auth.Auth{ID: "auth-disabled", Provider: "openai", Status: auth.StatusActive, Disabled: true})
+	mgr.RegisterAuth(&auth.Auth{ID: "auth-cooldown", Provider: "openai", Status: auth.StatusCooldown})
+	mgr.RegisterAuth(&auth.Auth{ID: "auth-active-2", Provider: "openai", Status: auth.StatusActive})
+	mgr.RegisterAuth(&auth.Auth{ID: "auth-active-1", Provider: "openai", Status: auth.StatusActive})
+
+	first, err := mgr.Select("gpt-4o-mini")
+	if err != nil {
+		t.Fatalf("first select: %v", err)
+	}
+	second, err := mgr.Select("gpt-4o-mini")
+	if err != nil {
+		t.Fatalf("second select: %v", err)
+	}
+
+	if first.ID != "auth-active-1" {
+		t.Fatalf("expected first active auth, got %q", first.ID)
+	}
+	if second.ID != "auth-active-2" {
+		t.Fatalf("expected second active auth, got %q", second.ID)
+	}
+}
+
 func TestManager_ExecuteReturnsExecutorBoundaryErrorForSupportedModel(t *testing.T) {
 	t.Parallel()
 

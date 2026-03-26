@@ -129,6 +129,9 @@ func writeRuntimeResult(w http.ResponseWriter, result *auth.Result) {
 			w.Header().Add(key, value)
 		}
 	}
+	if w.Header().Get("Content-Type") == "" {
+		w.Header().Set("Content-Type", "application/json")
+	}
 
 	statusCode := result.StatusCode
 	if statusCode == 0 {

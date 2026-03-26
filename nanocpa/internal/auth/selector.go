@@ -23,6 +23,9 @@ func (s *RoundRobinSelector) Select(model string, candidates []*Auth) *Auth {
 	}
 
 	s.mu.Lock()
+	if s.nextBy == nil {
+		s.nextBy = map[string]uint64{}
+	}
 	next := s.nextBy[model]
 	idx := int(next % uint64(len(candidates)))
 	s.nextBy[model] = next + 1
