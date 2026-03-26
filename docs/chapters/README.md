@@ -2,13 +2,15 @@
 
 This directory holds the guided walkthrough. Each chapter file explains the problem, the code change, and the verification steps that will map to a planned stable git tag once the milestone is implemented.
 
+As of 2026-03-26, no `chapter-*` tags are published yet. This document currently defines the roadmap for the rewrite and the snapshot navigation that will exist after the tags are published.
+
 ## Chapter Order
 
-Each chapter builds on the previous one in a single linear progression. The Start Tag for a chapter is the End Tag of the prior chapter; Chapter 1 begins from the baseline at commit `62f02a2` that precedes `chapter-01-bootstrap`. The End Tag names the commit readers can checkout to review or return to that milestone once it is published.
+Each chapter builds on the previous one in a single linear progression. Later chapters are planned to start from the prior chapter's published End Tag. During the rewrite, Chapter 1 uses commit `62f02a2` only as a temporary pre-tag reference while the milestone history is being rebuilt. The End Tag names the future published snapshot for that chapter.
 
 | Chapter | Start Reference (planned) | End Tag (planned) | Planned verification command(s) |
 | --- | --- | --- | --- |
-| 01 Bootstrap | baseline at commit `62f02a2` (`git checkout 62f02a2`) | `chapter-01-bootstrap` | `cd nanocpa && go test ./internal/api -run 'TestServer_'` (planned) |
+| 01 Bootstrap | temporary rewrite reference `62f02a2` before the first tag exists | `chapter-01-bootstrap` | `cd nanocpa && go test ./internal/api -run 'TestServer_'` (planned) |
 | 02 Config | `chapter-01-bootstrap` | `chapter-02-config` | `cd nanocpa && go test ./internal/config` (planned) |
 | 03 Access | `chapter-02-config` | `chapter-03-access` | `cd nanocpa && go test ./internal/access` and `cd nanocpa && go test ./internal/api -run 'Test.*Middleware'` (planned) |
 | 04 OpenAI Surface | `chapter-03-access` | `chapter-04-openai-surface` | `cd nanocpa && go test ./internal/api/... -run 'TestOpenAI|TestChatCompletions|TestModels'` (planned) |
@@ -20,21 +22,20 @@ Each chapter builds on the previous one in a single linear progression. The Star
 ## Tag Conventions
 
 - Chapter tags all use the prefix `chapter-` followed by a two-digit number and a short name (e.g., `chapter-04-openai-surface`).
-- Start tags are the prior chapter's end tag; the first chapter begins at the baseline commit `62f02a2` before `chapter-01-bootstrap` because there is no prior tutorial tag.
+- Start tags are planned to be the prior chapter's End Tag; Chapter 1 has no published Start Tag and currently uses `62f02a2` only as a temporary rewrite reference before `chapter-01-bootstrap` exists.
 - These tag names are planned milestones. Maintainers will publish the tags when each chapter is complete so readers can checkout the referenced commits.
 
 ## Roadmap Mode
 
-1. Follow each chapter document in order to understand the problem, the planned change, and the verification guidance before any tags are published.
-2. For Chapter 1, start from the baseline commit `62f02a2` (`git checkout 62f02a2`). For later chapters, treat the Start Tag as the prior chapter's planned End Tag.
-3. Run the planned verification commands listed in each chapter once its milestone code exists.
-4. After you implement and verify a chapter, move toward the next planned tag by continuing with the next chapter.
+1. Follow each chapter document in order to understand the intended progression, milestone boundaries, and planned verification work before any tags are published.
+2. Treat the Start/End references in these docs as planning markers for the rewrite, not as published tutorial snapshots you can navigate today.
+3. Use the chapter notes to understand what the eventual milestone history is supposed to contain and how each milestone will be verified once implemented.
 
 ## Snapshot Mode
 
-1. After a chapter milestone is tagged, checkout that chapter's published End Tag to inspect the snapshot. For Chapter 1, the start reference remains baseline commit `62f02a2` (`git checkout 62f02a2`), while the first published milestone snapshot is `chapter-01-bootstrap`.
-2. Run the verification commands documented in the chapter to confirm the milestone's behavior.
-3. When you are ready for the next milestone, checkout the next published End Tag and repeat.
+1. Once the rewrite is complete and tags are published, inspect a chapter milestone by checking out that chapter's published End Tag.
+2. For Chapter 1, there will be no published Start Tag; the first published snapshot will be `chapter-01-bootstrap`.
+3. Run the verification commands documented in the chapter to confirm the milestone's behavior, then move to the next published End Tag when needed.
 
 ## Verification Expectations
 

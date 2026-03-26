@@ -8,7 +8,7 @@ Establishing a service boundary with explicit configuration and safe HTTP timeou
 
 ## Why The Previous Chapter Is Not Enough
 
-Start here: there isn’t any previous chapter. The bootstrapping work moves the repository from the baseline at commit `62f02a2` into something that compiles and listens.
+Start here: there isn’t any previous chapter. During the rewrite, commit `62f02a2` serves only as a temporary pre-tag baseline reference. The intended Chapter 1 bootstrap snapshot will exist later, when `chapter-01-bootstrap` is published.
 
 ## New Concepts
 
@@ -18,11 +18,11 @@ Start here: there isn’t any previous chapter. The bootstrapping work moves the
 
 ## Implementation
 
-- Start Baseline (planned): baseline at commit `62f02a2` before `chapter-01-bootstrap`
+- Start Baseline (temporary rewrite reference): `62f02a2`
 - End Tag (planned): `chapter-01-bootstrap`
 - Build a `main` function that loads config and creates a server.
 - Keep the server simple: no auth, no handlers, only timeouts and listen address wiring.
-- These planned tags will be published once the chapter milestone is recorded so readers can jump directly to the completed snapshot.
+- As of 2026-03-26, this chapter snapshot is not yet published. Readers will be able to inspect it once `chapter-01-bootstrap` exists.
 
 ## Verification
 

@@ -18,7 +18,7 @@ This material targets programmers who are already comfortable reading Go code an
 
 ## How Chapter Tags Work
 
-Each chapter is planned to end with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). Once those tags are published, readers can check out the tag named in the chapter's **End Tag** line to see the exact code at that milestone. The **Start Tag** is the previous chapter's End Tag; Chapter 1 begins from the baseline at commit `62f02a2`, which predates the chapter tags. The **docs/chapters/README.md** file documents the tag order and verification expectations.
+Each chapter is planned to end with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). As of 2026-03-26, no `chapter-*` tags are published yet and the chapter-by-chapter history rewrite has not landed. During that rewrite, commit `62f02a2` is only a temporary pre-tag reference, not a published Chapter 1 snapshot. The **docs/chapters/README.md** file separates the roadmap from the future snapshot navigation.
 
 ## Chapters
 
