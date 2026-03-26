@@ -118,6 +118,41 @@ func TestManager_CandidatesReturnsActiveAuthsForRequestedModel(t *testing.T) {
 	}
 }
 
+func TestManager_SelectUsesDefaultRoundRobinSelector(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := registry.NewModelRegistry()
+	modelRegistry.RegisterClient("openai-1", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+	modelRegistry.RegisterClient("openai-2", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+
+	mgr := auth.NewManager(modelRegistry, nil)
+	mgr.RegisterAuth(&auth.Auth{ID: "openai-2", Provider: "openai", Status: auth.StatusActive})
+	mgr.RegisterAuth(&auth.Auth{ID: "openai-1", Provider: "openai", Status: auth.StatusActive})
+
+	first, err := mgr.Select("gpt-4o-mini")
+	if err != nil {
+		t.Fatalf("first select: %v", err)
+	}
+	second, err := mgr.Select("gpt-4o-mini")
+	if err != nil {
+		t.Fatalf("second select: %v", err)
+	}
+	third, err := mgr.Select("gpt-4o-mini")
+	if err != nil {
+		t.Fatalf("third select: %v", err)
+	}
+
+	if first.ID != "openai-1" {
+		t.Fatalf("expected first selection to use sorted candidate order, got %q", first.ID)
+	}
+	if second.ID != "openai-2" {
+		t.Fatalf("expected second selection to rotate to next candidate, got %q", second.ID)
+	}
+	if third.ID != "openai-1" {
+		t.Fatalf("expected third selection to wrap to first candidate, got %q", third.ID)
+	}
+}
+
 func TestManager_ExecuteReturnsExecutorBoundaryErrorForSupportedModel(t *testing.T) {
 	t.Parallel()
 
@@ -137,6 +172,53 @@ func TestManager_ExecuteReturnsExecutorBoundaryErrorForSupportedModel(t *testing
 	}
 	if !strings.Contains(err.Error(), `no executor registered for provider "openai"`) {
 		t.Fatalf("expected missing executor error, got %v", err)
+	}
+}
+
+func TestManager_ExecuteForwardsSelectedAuthAndRequestBodyToExecutor(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := registry.NewModelRegistry()
+	modelRegistry.RegisterClient("openai-1", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+	modelRegistry.RegisterClient("openai-2", "openai", []registry.ModelInfo{{ID: "gpt-4o-mini"}})
+
+	mgr := auth.NewManager(modelRegistry, nil)
+	mgr.RegisterAuth(&auth.Auth{ID: "openai-2", Provider: "openai", Status: auth.StatusActive})
+	mgr.RegisterAuth(&auth.Auth{ID: "openai-1", Provider: "openai", Status: auth.StatusActive})
+
+	requestBody := []byte(`{"model":"gpt-4o-mini","messages":[]}`)
+	executor := &fakeExecutor{
+		execute: func(ctx context.Context, openAIRequest []byte, runtimeAuth *auth.Auth) (*auth.Result, error) {
+			if runtimeAuth == nil {
+				t.Fatal("expected selected runtime auth")
+			}
+			if runtimeAuth.ID != "openai-1" {
+				t.Fatalf("expected first round-robin auth to be forwarded, got %q", runtimeAuth.ID)
+			}
+			if string(openAIRequest) != string(requestBody) {
+				t.Fatalf("expected request body to be forwarded unchanged, got %s", string(openAIRequest))
+			}
+
+			return &auth.Result{
+				StatusCode: 201,
+				Body:       []byte(`{"ok":true}`),
+			}, nil
+		},
+	}
+	mgr.RegisterExecutor("openai", executor)
+
+	result, err := mgr.Execute(context.Background(), "gpt-4o-mini", requestBody)
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result from executor")
+	}
+	if result.StatusCode != 201 {
+		t.Fatalf("expected status 201, got %d", result.StatusCode)
+	}
+	if string(result.Body) != `{"ok":true}` {
+		t.Fatalf("expected executor body to be returned, got %s", string(result.Body))
 	}
 }
 

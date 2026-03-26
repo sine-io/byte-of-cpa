@@ -1,22 +1,15 @@
 package executor
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 )
 
-type Result struct {
-	StatusCode int
-	Body       []byte
-	Headers    http.Header
-}
+type Result = auth.Result
 
-type ChatCompletionsExecutor interface {
-	Execute(ctx context.Context, openAIRequest []byte, runtimeAuth *auth.Auth) (*Result, error)
-}
+type ChatCompletionsExecutor = auth.Executor
 
 type UpstreamError struct {
 	StatusCode int

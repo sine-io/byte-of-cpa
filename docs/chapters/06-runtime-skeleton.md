@@ -39,7 +39,7 @@ That is the minimum structure needed to keep the request path stable while futur
 ## New Concepts
 
 - `Auth`
-  Runtime auth state derived from config, including provider identity, credentials, and lifecycle flags such as disabled or cooldown.
+  Runtime auth state derived from config, including provider identity, credentials, and runtime lifecycle fields. In this chapter the config-to-server wiring still registers configured auths as active.
 - `Selector`
   Chooses one auth from the candidate set for a model. The first implementation is round-robin, but the manager stays generic.
 - `Executor`

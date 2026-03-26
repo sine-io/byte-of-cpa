@@ -33,7 +33,7 @@ func NewClaude(client *http.Client) *Claude {
 	}
 }
 
-func (c *Claude) Execute(ctx context.Context, openAIRequest []byte, runtimeAuth *auth.Auth) (*Result, error) {
+func (c *Claude) Execute(ctx context.Context, openAIRequest []byte, runtimeAuth *auth.Auth) (*auth.Result, error) {
 	if runtimeAuth == nil {
 		return nil, errors.New("runtime auth is required")
 	}
@@ -84,7 +84,7 @@ func (c *Claude) Execute(ctx context.Context, openAIRequest []byte, runtimeAuth 
 		return nil, fmt.Errorf("translate claude response: %w", err)
 	}
 
-	return &Result{
+	return &auth.Result{
 		StatusCode: resp.StatusCode,
 		Body:       payload,
 		Headers:    translatedResponseHeaders(resp.Header),
