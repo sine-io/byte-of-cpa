@@ -32,7 +32,7 @@ Each chapter builds on the previous one in a single linear progression. The Star
 
 ## Snapshot Mode
 
-1. After a chapter milestone is tagged, checkout the Start Tag for that chapter (for Chapter 1, the Start Tag is `chapter-01-bootstrap`).
+1. After a chapter milestone is tagged, checkout the Start Tag for that chapter; for Chapter 1, there is no Start Tag, so checkout `chapter-01-bootstrap` to view the first milestone snapshot.
 2. Run the verification commands documented in the chapter to confirm the milestone's behavior.
 3. When you are ready for the next milestone, checkout the next published End Tag and repeat.
 
