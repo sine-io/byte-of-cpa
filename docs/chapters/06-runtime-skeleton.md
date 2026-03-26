@@ -72,6 +72,7 @@ That split lets later chapters add Claude or OpenAI adapters without rewriting t
 
 - `cd nanocpa && go test ./internal/auth ./internal/registry`
 - `cd nanocpa && go test ./internal/api/...`
+- `cd nanocpa && go test ./internal/runtime/executor/...`
 
 ## What You Have Now
 
