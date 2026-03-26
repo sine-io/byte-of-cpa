@@ -20,19 +20,19 @@ Model IDs are routing inputs. A request arrives with `model: "gpt-4o-mini"` or `
 
 ## Implementation
 
-- Start Tag (planned): `chapter-04-openai-surface`
-- End Tag (planned): `chapter-05-model-registry`
+- Start Tag: `chapter-04-openai-surface`
+- End Tag: `chapter-05-model-registry`
 - Build a registry that records models per configured client/provider and exposes lookup helpers.
 - Construct the registry from `config.Providers` when the API server starts.
 - Wire `/v1/models` to the registry so the response contains only real configured model IDs.
 - Reject unsupported chat completion requests before any hypothetical upstream call.
-- The planned tags will be published with the chapter so readers can review the model registry milestone.
+- This chapter snapshot is captured by `chapter-05-model-registry`.
 
 `/v1/models` should reflect real configured availability because clients use it as discovery. If the endpoint lists models that are not actually configured, the API is lying about what it can route. If it omits configured models, clients lose visibility into usable capacity. The handler should therefore render the registry snapshot, not a static placeholder.
 
 ## Verification
 
-Planned: `cd nanocpa && go test ./internal/registry ./internal/api/...` once the registry wiring is in place.
+Run: `cd nanocpa && go test ./internal/registry ./internal/api/...`
 
 ## What You Have Now
 
