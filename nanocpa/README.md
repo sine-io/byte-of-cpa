@@ -1,6 +1,6 @@
 # NanoCPA
 
-NanoCPA contains the working tutorial code referenced by the chapters in `docs/chapters/`. Each chapter document describes a teaching milestone and points to the published tag that captures the code for that milestone so readers can follow along.
+NanoCPA contains the working tutorial code referenced by the chapters in `docs/chapters/`. Each chapter document describes a teaching milestone and names the planned tag that will capture that milestone once it is published so readers can follow along.
 
 ## Tutorial Structure
 
@@ -10,9 +10,9 @@ NanoCPA contains the working tutorial code referenced by the chapters in `docs/c
 
 ## Reader Flow
 
-- `nanocpa/` always contains the living code; follow `main` until the first published chapter tag.
-- When a chapter reaches a milestone, the corresponding `chapter-XX-...` tag is published so readers can checkout that snapshot.
-- Start the tutorial on the most recent tag you care about, run the verification commands in the chapter docs, and move forward by checking out the next published End Tag once it exists.
+- `nanocpa/` always contains the living code; start from the baseline commit or the most recent published chapter tag that exists.
+- Each chapter doc names the planned `chapter-XX-...` tag that will be published when the milestone is ready; readers can checkout that tag once it appears to revisit the snapshot.
+- Run the verification commands in the chapter docs before moving on. When the next End Tag is published, checkout that tag to continue the tutorial.
 
 ## Config
 

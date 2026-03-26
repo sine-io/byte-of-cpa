@@ -26,7 +26,8 @@ Model availability is known, but the runtime still handles requests directly fro
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/auth ./internal/registry`
++ `cd nanocpa && go test ./internal/auth ./internal/registry`
++ `cd nanocpa && go test ./internal/api -run 'TestServer_'`
 
 ## What You Have Now
 
