@@ -27,6 +27,7 @@ Claude requests now succeed, but only with a single upstream. Real CPAs need rou
 ## Verification
 
 - `cd nanocpa && go test ./internal/auth ./internal/api -run 'TestManager_|TestServer_'`
+- `cd nanocpa && go test ./...`
 
 ## What You Have Now
 

@@ -27,6 +27,7 @@ Configuration makes the server data-driven, but without access checks anybody ca
 ## Verification
 
 - `cd nanocpa && go test ./internal/access`
+- `cd nanocpa && go test ./internal/api -run 'Test.*Middleware'`
 
 ## What You Have Now
 
