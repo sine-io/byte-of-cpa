@@ -10,6 +10,7 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/translator"
 )
 
 type ChatRuntime interface {
@@ -69,7 +70,16 @@ func (h *OpenAI) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		result, err := h.runtime.Execute(r.Context(), req.Model, requestBody)
-		if err != nil || result == nil {
+		if err != nil {
+			var validationErr *translator.ValidationError
+			if translator.AsValidationError(err, &validationErr) {
+				writeOpenAIError(w, validationErr.StatusCode, validationErr.Message, "invalid_request_error")
+				return
+			}
+			writeOpenAIError(w, http.StatusBadGateway, "upstream provider request failed", "api_error")
+			return
+		}
+		if result == nil {
 			writeOpenAIError(w, http.StatusBadGateway, "upstream provider request failed", "api_error")
 			return
 		}

@@ -1,6 +1,7 @@
 package translator
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,8 +9,12 @@ import (
 )
 
 type openAIChatRequest struct {
-	Model    string               `json:"model"`
-	Messages []openAIInputMessage `json:"messages"`
+	Model      string               `json:"model"`
+	Messages   []openAIInputMessage `json:"messages"`
+	Stream     bool                 `json:"stream,omitempty"`
+	N          *int                 `json:"n,omitempty"`
+	Tools      json.RawMessage      `json:"tools,omitempty"`
+	ToolChoice json.RawMessage      `json:"tool_choice,omitempty"`
 }
 
 type openAIInputMessage struct {
@@ -54,6 +59,30 @@ func OpenAIChatToClaudeRequest(openAIRequest []byte) ([]byte, error) {
 		return nil, &ValidationError{
 			StatusCode: 400,
 			Message:    "model is required",
+		}
+	}
+	if in.Stream {
+		return nil, &ValidationError{
+			StatusCode: 400,
+			Message:    "stream=true is not supported for Claude chat completions in Chapter 7",
+		}
+	}
+	if in.N != nil && *in.N != 1 {
+		return nil, &ValidationError{
+			StatusCode: 400,
+			Message:    fmt.Sprintf("n=%d is not supported; only n=1 is allowed for Claude chat completions in Chapter 7", *in.N),
+		}
+	}
+	if hasJSONValue(in.Tools) {
+		return nil, &ValidationError{
+			StatusCode: 400,
+			Message:    "tools are not supported for Claude chat completions in Chapter 7",
+		}
+	}
+	if hasJSONValue(in.ToolChoice) {
+		return nil, &ValidationError{
+			StatusCode: 400,
+			Message:    "tool_choice is not supported for Claude chat completions in Chapter 7",
 		}
 	}
 
@@ -118,13 +147,22 @@ func ClaudeResponseToOpenAIResponse(claudeResponse []byte) ([]byte, error) {
 	}
 
 	var assistantText string
-	for _, block := range in.Content {
-		if block.Type == "text" {
-			if assistantText != "" {
-				assistantText += "\n"
-			}
-			assistantText += block.Text
+	hasUsableText := false
+	for i, block := range in.Content {
+		if block.Type != "text" {
+			return nil, fmt.Errorf("unsupported claude response content[%d].type %q", i, block.Type)
 		}
+		if strings.TrimSpace(block.Text) == "" {
+			continue
+		}
+		if assistantText != "" {
+			assistantText += "\n"
+		}
+		assistantText += block.Text
+		hasUsableText = true
+	}
+	if !hasUsableText {
+		return nil, errors.New("claude response content contains no usable text blocks")
 	}
 
 	out := map[string]any{
@@ -143,4 +181,11 @@ func ClaudeResponseToOpenAIResponse(claudeResponse []byte) ([]byte, error) {
 		},
 	}
 	return json.Marshal(out)
+}
+
+func hasJSONValue(raw json.RawMessage) bool {
+	if len(raw) == 0 {
+		return false
+	}
+	return !bytes.Equal(bytes.TrimSpace(raw), []byte("null"))
 }

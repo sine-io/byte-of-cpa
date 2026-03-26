@@ -110,6 +110,59 @@ func TestOpenAIChatToClaudeRequest_RejectsUnsupportedContentShape(t *testing.T) 
 	}
 }
 
+func TestOpenAIChatToClaudeRequest_RejectsUnsupportedFeatures(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		requestBody string
+		wantMessage string
+	}{
+		{
+			name:        "streaming",
+			requestBody: `{"model":"claude-3-7-sonnet","stream":true,"messages":[{"role":"user","content":"hello"}]}`,
+			wantMessage: "stream",
+		},
+		{
+			name:        "multiple choices",
+			requestBody: `{"model":"claude-3-7-sonnet","n":2,"messages":[{"role":"user","content":"hello"}]}`,
+			wantMessage: "n",
+		},
+		{
+			name:        "tools",
+			requestBody: `{"model":"claude-3-7-sonnet","tools":[{"type":"function","function":{"name":"lookup"}}],"messages":[{"role":"user","content":"hello"}]}`,
+			wantMessage: "tools",
+		},
+		{
+			name:        "tool choice",
+			requestBody: `{"model":"claude-3-7-sonnet","tool_choice":"auto","messages":[{"role":"user","content":"hello"}]}`,
+			wantMessage: "tool_choice",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := OpenAIChatToClaudeRequest([]byte(tt.requestBody))
+			if err == nil {
+				t.Fatal("expected validation error")
+			}
+
+			var validationErr *ValidationError
+			if !AsValidationError(err, &validationErr) {
+				t.Fatalf("expected ValidationError, got %T", err)
+			}
+			if validationErr.StatusCode != 400 {
+				t.Fatalf("expected 400 status code, got %d", validationErr.StatusCode)
+			}
+			if !strings.Contains(validationErr.Message, tt.wantMessage) {
+				t.Fatalf("expected message containing %q, got %q", tt.wantMessage, validationErr.Message)
+			}
+		})
+	}
+}
+
 func TestOpenAIChatToClaudeRequest_RejectsInvalidRole(t *testing.T) {
 	t.Parallel()
 
@@ -193,5 +246,48 @@ func TestClaudeResponseToOpenAIResponse_MapsToOpenAIShape(t *testing.T) {
 	}
 	if message["role"] != "assistant" || message["content"] != "hello from claude" {
 		t.Fatalf("unexpected assistant message: %#v", message)
+	}
+}
+
+func TestClaudeResponseToOpenAIResponse_RejectsUnsupportedOrEmptyContent(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		input       []byte
+		wantMessage string
+	}{
+		{
+			name: "unsupported block type",
+			input: []byte(`{
+				"id":"msg_1",
+				"model":"claude-3-7-sonnet",
+				"content":[{"type":"tool_use","text":"ignored"}]
+			}`),
+			wantMessage: "unsupported",
+		},
+		{
+			name: "empty text content",
+			input: []byte(`{
+				"id":"msg_1",
+				"model":"claude-3-7-sonnet",
+				"content":[{"type":"text","text":"   "}]
+			}`),
+			wantMessage: "no usable text",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := ClaudeResponseToOpenAIResponse(tt.input)
+			if err == nil {
+				t.Fatal("expected response translation error")
+			}
+			if !strings.Contains(err.Error(), tt.wantMessage) {
+				t.Fatalf("expected error containing %q, got %q", tt.wantMessage, err.Error())
+			}
+		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/api"
@@ -152,6 +153,50 @@ func TestOpenAI_ServerExecutesConfiguredClaudeProvider(t *testing.T) {
 	}
 	if response.Choices[0].Message.Role != "assistant" || response.Choices[0].Message.Content != "hello from claude" {
 		t.Fatalf("unexpected assistant message: %+v", response.Choices[0].Message)
+	}
+}
+
+func TestOpenAI_ServerReturnsTranslatorValidationErrorsAsInvalidRequestWithoutCallingUpstream(t *testing.T) {
+	t.Parallel()
+
+	var upstreamCalls int32
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&upstreamCalls, 1)
+		t.Fatalf("upstream should not be called for translator validation failures")
+	}))
+	defer upstream.Close()
+
+	server := api.NewServer(&config.Config{
+		Host:    "127.0.0.1",
+		Port:    18080,
+		APIKeys: []string{"dev-key"},
+		Providers: []config.Provider{
+			{
+				ID:       "provider-1",
+				Provider: "claude",
+				APIKey:   "provider-secret",
+				BaseURL:  upstream.URL,
+				Models:   []string{"claude-3-5-haiku"},
+			},
+		},
+	})
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{
+		"model":"claude-3-5-haiku",
+		"stream":true,
+		"messages":[{"role":"user","content":"hello"}]
+	}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for translator validation failure, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	assertOpenAIError(t, rec, "invalid_request_error", "stream")
+	if got := atomic.LoadInt32(&upstreamCalls); got != 0 {
+		t.Fatalf("expected upstream to remain untouched, got %d calls", got)
 	}
 }
 
