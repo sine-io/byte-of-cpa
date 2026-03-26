@@ -72,11 +72,11 @@ func TestLoad_PortValidation(t *testing.T) {
 func TestLoad_UnknownField(t *testing.T) {
 	t.Parallel()
 
-	_, err := loadConfig(t, "host: 127.0.0.1\nport: 8317\nproviders: []\n")
+	_, err := loadConfig(t, "host: 127.0.0.1\nport: 8317\nbootstrap_mode: true\n")
 	if err == nil {
 		t.Fatal("expected parse error for unknown field")
 	}
-	if !strings.Contains(err.Error(), "field providers not found") {
+	if !strings.Contains(err.Error(), "field bootstrap_mode not found") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
