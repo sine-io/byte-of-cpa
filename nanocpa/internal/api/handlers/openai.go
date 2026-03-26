@@ -63,8 +63,10 @@ func (h *OpenAI) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	modelConfigured := h.modelRegistry != nil && len(h.modelRegistry.GetModelProviders(req.Model)) > 0
+
 	if h.runtime != nil {
-		if !h.runtime.SupportsModel(req.Model) {
+		if !modelConfigured && (h.modelRegistry != nil || !h.runtime.SupportsModel(req.Model)) {
 			writeOpenAIError(w, http.StatusBadRequest, fmt.Sprintf("model %q is not available", req.Model), "invalid_request_error")
 			return
 		}
@@ -88,7 +90,7 @@ func (h *OpenAI) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.modelRegistry == nil || len(h.modelRegistry.GetModelProviders(req.Model)) == 0 {
+	if !modelConfigured {
 		writeOpenAIError(w, http.StatusBadRequest, fmt.Sprintf("model %q is not available", req.Model), "invalid_request_error")
 		return
 	}

@@ -61,6 +61,35 @@ func TestChatCompletionsSupportedModelStillReturnsStableAPIError(t *testing.T) {
 	}
 }
 
+func TestChatCompletionsConfiguredModelWithOnlyDisabledOrCooldownAuthsReturnsAPIError(t *testing.T) {
+	t.Parallel()
+
+	modelRegistry := newRegistry(
+		registryRegistration{authID: "auth-disabled", provider: "openai", models: []string{"gpt-4o-mini"}},
+		registryRegistration{authID: "auth-cooldown", provider: "openai", models: []string{"gpt-4o-mini"}},
+	)
+	runtimeManager := auth.NewManager(modelRegistry, nil)
+	runtimeManager.RegisterAuth(&auth.Auth{ID: "auth-disabled", Provider: "openai", Status: auth.StatusActive, Disabled: true})
+	runtimeManager.RegisterAuth(&auth.Auth{ID: "auth-cooldown", Provider: "openai", Status: auth.StatusCooldown})
+
+	openAI := handlers.NewOpenAI(modelRegistry, runtimeManager)
+	mux := http.NewServeMux()
+	openAI.RegisterRoutes(mux)
+	handler := api.APIKeyMiddleware([]string{"dev-key"}, mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{"model":"gpt-4o-mini","messages":[]}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 when configured model has no selectable runtime auth, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	assertOpenAIError(t, rec, "api_error", "upstream provider request failed")
+}
+
 func TestOpenAI_ServerUsesRuntimeManagerForConfiguredChatModels(t *testing.T) {
 	t.Parallel()
 
@@ -400,7 +429,9 @@ func TestChatCompletionsRejectsUnsupportedModelBeforeUpstreamHandling(t *testing
 func TestChatCompletionsRuntimeValidationErrorsReturnInvalidRequestError(t *testing.T) {
 	t.Parallel()
 
-	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+	openAI := handlers.NewOpenAI(newRegistry(
+		registryRegistration{authID: "provider-1", provider: "claude", models: []string{"claude-3-5-haiku"}},
+	), &stubRuntime{
 		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
 		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
 			return nil, &translator.ValidationError{
@@ -429,7 +460,9 @@ func TestChatCompletionsRuntimeValidationErrorsReturnInvalidRequestError(t *test
 func TestChatCompletionsRuntimeErrorsNormalizeToStableAPIError(t *testing.T) {
 	t.Parallel()
 
-	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+	openAI := handlers.NewOpenAI(newRegistry(
+		registryRegistration{authID: "provider-1", provider: "claude", models: []string{"claude-3-5-haiku"}},
+	), &stubRuntime{
 		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
 		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
 			return nil, errors.New("dial tcp 127.0.0.1:443: connection refused")
@@ -458,7 +491,9 @@ func TestChatCompletionsRuntimeErrorsNormalizeToStableAPIError(t *testing.T) {
 func TestChatCompletionsRuntimeResultsDefaultContentTypeToApplicationJSON(t *testing.T) {
 	t.Parallel()
 
-	openAI := handlers.NewOpenAI(newRegistry(), &stubRuntime{
+	openAI := handlers.NewOpenAI(newRegistry(
+		registryRegistration{authID: "provider-1", provider: "claude", models: []string{"claude-3-5-haiku"}},
+	), &stubRuntime{
 		supportsModel: func(model string) bool { return model == "claude-3-5-haiku" },
 		execute: func(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error) {
 			return &auth.Result{
