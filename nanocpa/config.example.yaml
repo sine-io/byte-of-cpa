@@ -1,0 +1,13 @@
+host: 127.0.0.1
+port: 8317
+
+api_keys:
+  - dev-key
+
+providers:
+  - id: claude-main
+    provider: claude
+    api_key: your-provider-api-key
+    base_url: https://api.anthropic.com
+    models:
+      - claude-3-7-sonnet
