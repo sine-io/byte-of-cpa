@@ -12,6 +12,65 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 )
 
+func TestClaudeExecutor_Execute_RequiresRuntimeAuth(t *testing.T) {
+	t.Parallel()
+
+	exec := NewClaude(nil)
+
+	result, err := exec.Execute(context.Background(), []byte(`{"model":"claude-3-7-sonnet","messages":[{"role":"user","content":"hello"}]}`), nil)
+	if err == nil {
+		t.Fatal("expected error when runtime auth is missing")
+	}
+	if result != nil {
+		t.Fatalf("expected nil result when runtime auth is missing, got %#v", result)
+	}
+	if got := err.Error(); got != "runtime auth is required" {
+		t.Fatalf("unexpected error: %q", got)
+	}
+}
+
+func TestClaudeExecutor_Execute_RequiresBaseURL(t *testing.T) {
+	t.Parallel()
+
+	exec := NewClaude(nil)
+
+	result, err := exec.Execute(context.Background(), []byte(`{"model":"claude-3-7-sonnet","messages":[{"role":"user","content":"hello"}]}`), &auth.Auth{
+		ID:         "p1",
+		Provider:   "claude",
+		Attributes: map[string]string{"api_key": "provider-secret"},
+	})
+	if err == nil {
+		t.Fatal("expected error when base_url is missing")
+	}
+	if result != nil {
+		t.Fatalf("expected nil result when base_url is missing, got %#v", result)
+	}
+	if got := err.Error(); got != "runtime auth missing base_url" {
+		t.Fatalf("unexpected error: %q", got)
+	}
+}
+
+func TestClaudeExecutor_Execute_RequiresAPIKey(t *testing.T) {
+	t.Parallel()
+
+	exec := NewClaude(nil)
+
+	result, err := exec.Execute(context.Background(), []byte(`{"model":"claude-3-7-sonnet","messages":[{"role":"user","content":"hello"}]}`), &auth.Auth{
+		ID:         "p1",
+		Provider:   "claude",
+		Attributes: map[string]string{"base_url": "https://example.invalid"},
+	})
+	if err == nil {
+		t.Fatal("expected error when api_key is missing")
+	}
+	if result != nil {
+		t.Fatalf("expected nil result when api_key is missing, got %#v", result)
+	}
+	if got := err.Error(); got != "runtime auth missing api_key" {
+		t.Fatalf("unexpected error: %q", got)
+	}
+}
+
 func TestClaudeExecutor_Execute_IncludesAPIKeyAndReturnsResponse(t *testing.T) {
 	t.Parallel()
 
@@ -28,8 +87,8 @@ func TestClaudeExecutor_Execute_IncludesAPIKeyAndReturnsResponse(t *testing.T) {
 		if got := r.Header.Get("content-type"); got != "application/json" {
 			t.Fatalf("expected content-type application/json, got %q", got)
 		}
-		if got := r.Header.Get("anthropic-version"); got == "" {
-			t.Fatalf("expected anthropic-version header to be set")
+		if got := r.Header.Get("anthropic-version"); got != "2023-06-01" {
+			t.Fatalf("expected anthropic-version 2023-06-01, got %q", got)
 		}
 
 		body, err := io.ReadAll(r.Body)

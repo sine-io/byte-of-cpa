@@ -6,12 +6,15 @@ import (
 	"testing"
 )
 
-func TestOpenAIChatToClaudeRequest_BasicMapping(t *testing.T) {
+func TestOpenAIChatToClaudeRequest_MapsOpenAIChatToClaudeMessages(t *testing.T) {
 	t.Parallel()
 
 	openAIRequest := []byte(`{
 		"model":"claude-3-7-sonnet",
-		"messages":[{"role":"user","content":"hello"}]
+		"messages":[
+			{"role":"user","content":"hello"},
+			{"role":"assistant","content":"hi there"}
+		]
 	}`)
 
 	got, err := OpenAIChatToClaudeRequest(openAIRequest)
@@ -27,19 +30,29 @@ func TestOpenAIChatToClaudeRequest_BasicMapping(t *testing.T) {
 	if decoded["model"] != "claude-3-7-sonnet" {
 		t.Fatalf("expected model preserved, got %#v", decoded["model"])
 	}
-
-	messages, ok := decoded["messages"].([]any)
-	if !ok || len(messages) != 1 {
-		t.Fatalf("expected one message, got %#v", decoded["messages"])
+	if decoded["max_tokens"] != float64(1024) {
+		t.Fatalf("expected narrow default max_tokens, got %#v", decoded["max_tokens"])
 	}
 
-	msg, ok := messages[0].(map[string]any)
+	messages, ok := decoded["messages"].([]any)
+	if !ok || len(messages) != 2 {
+		t.Fatalf("expected two translated messages, got %#v", decoded["messages"])
+	}
+
+	first, ok := messages[0].(map[string]any)
 	if !ok {
 		t.Fatalf("expected object message, got %#v", messages[0])
 	}
+	if first["role"] != "user" || first["content"] != "hello" {
+		t.Fatalf("unexpected first message: %#v", first)
+	}
 
-	if msg["role"] != "user" {
-		t.Fatalf("expected role user, got %#v", msg["role"])
+	second, ok := messages[1].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object message, got %#v", messages[1])
+	}
+	if second["role"] != "assistant" || second["content"] != "hi there" {
+		t.Fatalf("unexpected second message: %#v", second)
 	}
 }
 

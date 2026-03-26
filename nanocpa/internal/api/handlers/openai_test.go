@@ -67,6 +67,94 @@ func TestOpenAI_ServerUsesRuntimeManagerForConfiguredChatModels(t *testing.T) {
 	assertOpenAIError(t, rec, "api_error", "upstream provider request failed")
 }
 
+func TestOpenAI_ServerExecutesConfiguredClaudeProvider(t *testing.T) {
+	t.Parallel()
+
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", r.Method)
+		}
+		if r.URL.Path != "/v1/messages" {
+			t.Fatalf("expected /v1/messages, got %s", r.URL.Path)
+		}
+		if got := r.Header.Get("x-api-key"); got != "provider-secret" {
+			t.Fatalf("expected x-api-key header, got %q", got)
+		}
+		if got := r.Header.Get("anthropic-version"); got != "2023-06-01" {
+			t.Fatalf("expected anthropic-version 2023-06-01, got %q", got)
+		}
+
+		w.Header().Set("x-request-id", "req-claude")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"id":"msg_1",
+			"model":"claude-3-5-haiku",
+			"content":[{"type":"text","text":"hello from claude"}]
+		}`))
+	}))
+	defer upstream.Close()
+
+	server := api.NewServer(&config.Config{
+		Host:    "127.0.0.1",
+		Port:    18080,
+		APIKeys: []string{"dev-key"},
+		Providers: []config.Provider{
+			{
+				ID:       "provider-1",
+				Provider: "claude",
+				APIKey:   "provider-secret",
+				BaseURL:  upstream.URL,
+				Models:   []string{"claude-3-5-haiku"},
+			},
+		},
+	})
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{
+		"model":"claude-3-5-haiku",
+		"messages":[
+			{"role":"system","content":"be concise"},
+			{"role":"user","content":"hello"}
+		]
+	}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for configured Claude model, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if got := rec.Header().Get("x-request-id"); got != "req-claude" {
+		t.Fatalf("expected x-request-id passthrough, got %q", got)
+	}
+
+	var response struct {
+		Object  string `json:"object"`
+		Model   string `json:"model"`
+		Choices []struct {
+			Message struct {
+				Role    string `json:"role"`
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if response.Object != "chat.completion" {
+		t.Fatalf("expected chat.completion object, got %q", response.Object)
+	}
+	if response.Model != "claude-3-5-haiku" {
+		t.Fatalf("expected model claude-3-5-haiku, got %q", response.Model)
+	}
+	if len(response.Choices) != 1 {
+		t.Fatalf("expected one choice, got %d", len(response.Choices))
+	}
+	if response.Choices[0].Message.Role != "assistant" || response.Choices[0].Message.Content != "hello from claude" {
+		t.Fatalf("unexpected assistant message: %+v", response.Choices[0].Message)
+	}
+}
+
 func TestOpenAI_ServerRegistersRoutesBehindAccessMiddleware(t *testing.T) {
 	t.Parallel()
 

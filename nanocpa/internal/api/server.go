@@ -11,6 +11,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/runtime/executor"
 )
 
 type Server struct {
@@ -91,8 +92,17 @@ func buildRuntimeManager(cfg *config.Config, modelRegistry *registry.ModelRegist
 		return runtimeManager
 	}
 
+	registeredExecutors := make(map[string]struct{}, len(cfg.Providers))
 	now := time.Now()
 	for _, provider := range cfg.Providers {
+		if _, ok := registeredExecutors[provider.Provider]; !ok {
+			switch provider.Provider {
+			case "claude":
+				runtimeManager.RegisterExecutor(provider.Provider, executor.NewClaude(nil))
+			}
+			registeredExecutors[provider.Provider] = struct{}{}
+		}
+
 		runtimeManager.RegisterAuth(&auth.Auth{
 			ID:       provider.ID,
 			Provider: provider.Provider,
