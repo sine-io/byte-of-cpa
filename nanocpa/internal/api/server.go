@@ -9,6 +9,7 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/api/handlers"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
 )
 
 type Server struct {
@@ -20,7 +21,8 @@ type Server struct {
 func NewServer(cfg *config.Config) *Server {
 	handler := http.Handler(http.NewServeMux())
 	if cfg != nil {
-		openAI := handlers.NewOpenAI()
+		modelRegistry := buildModelRegistry(cfg)
+		openAI := handlers.NewOpenAI(modelRegistry)
 		mux := http.NewServeMux()
 		openAI.RegisterRoutes(mux)
 		handler = APIKeyMiddleware(cfg.APIKeys, mux)
@@ -62,4 +64,21 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.handler.ServeHTTP(w, r)
+}
+
+func buildModelRegistry(cfg *config.Config) *registry.ModelRegistry {
+	modelRegistry := registry.NewModelRegistry()
+	if cfg == nil {
+		return modelRegistry
+	}
+
+	for _, provider := range cfg.Providers {
+		models := make([]registry.ModelInfo, 0, len(provider.Models))
+		for _, modelID := range provider.Models {
+			models = append(models, registry.ModelInfo{ID: modelID})
+		}
+		modelRegistry.RegisterClient(provider.ID, provider.Provider, models)
+	}
+
+	return modelRegistry
 }

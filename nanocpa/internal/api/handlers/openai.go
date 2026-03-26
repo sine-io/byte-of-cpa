@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
 )
 
-type OpenAI struct{}
+type OpenAI struct {
+	modelRegistry *registry.ModelRegistry
+}
 
 const maxChatCompletionsRequestBodyBytes int64 = 4 * 1024 * 1024
 
-func NewOpenAI() *OpenAI {
-	return &OpenAI{}
+func NewOpenAI(modelRegistry *registry.ModelRegistry) *OpenAI {
+	return &OpenAI{modelRegistry: modelRegistry}
 }
 
 func (h *OpenAI) RegisterRoutes(mux *http.ServeMux) {
@@ -46,6 +50,10 @@ func (h *OpenAI) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		writeOpenAIError(w, http.StatusBadRequest, "model is required", "invalid_request_error")
 		return
 	}
+	if h.modelRegistry == nil || len(h.modelRegistry.GetModelProviders(req.Model)) == 0 {
+		writeOpenAIError(w, http.StatusBadRequest, fmt.Sprintf("model %q is not available", req.Model), "invalid_request_error")
+		return
+	}
 
 	writeOpenAIError(w, http.StatusBadGateway, "upstream provider request failed", "api_error")
 }
@@ -62,6 +70,16 @@ func (h *OpenAI) Models(w http.ResponseWriter, r *http.Request) {
 	}{
 		Object: "list",
 		Data:   []model{},
+	}
+	if h.modelRegistry != nil {
+		models := h.modelRegistry.ListModels()
+		response.Data = make([]model, 0, len(models))
+		for _, info := range models {
+			response.Data = append(response.Data, model{
+				ID:     info.ID,
+				Object: "model",
+			})
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(response)
