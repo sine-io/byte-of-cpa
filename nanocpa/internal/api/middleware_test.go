@@ -17,7 +17,7 @@ func TestAPIKeyMiddleware_AllowsAuthorizedRequest(t *testing.T) {
 
 	handler := APIKeyMiddleware([]string{"dev-key"}, next)
 	req := httptest.NewRequest(http.MethodGet, "/v1/chat/completions", nil)
-	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Authorization", "bearer dev-key")
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)
@@ -39,7 +39,7 @@ func TestAPIKeyMiddleware_UnauthorizedRequests(t *testing.T) {
 	}{
 		{
 			name:          "wrong scheme",
-			authorization: "bearer dev-key",
+			authorization: "Basic dev-key",
 		},
 		{
 			name:          "missing token",
@@ -80,10 +80,46 @@ func TestAPIKeyMiddleware_UnauthorizedRequests(t *testing.T) {
 			if got := recorder.Header().Get("Content-Type"); got != "application/json" {
 				t.Fatalf("expected content-type application/json, got %q", got)
 			}
+			if got := recorder.Header().Get("WWW-Authenticate"); got != "Bearer" {
+				t.Fatalf("expected WWW-Authenticate Bearer, got %q", got)
+			}
 			const wantBody = `{"error":{"message":"unauthorized","type":"invalid_request_error"}}`
 			if got := recorder.Body.String(); got != wantBody {
 				t.Fatalf("expected body %q, got %q", wantBody, got)
 			}
 		})
+	}
+}
+
+func TestAPIKeyMiddleware_MissingAuthorizationHeaderUnauthorized(t *testing.T) {
+	t.Parallel()
+
+	nextCalled := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nextCalled = true
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	handler := APIKeyMiddleware([]string{"dev-key"}, next)
+	req := httptest.NewRequest(http.MethodGet, "/v1/chat/completions", nil)
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, req)
+
+	if nextCalled {
+		t.Fatal("expected middleware to block request without authorization header")
+	}
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
+	}
+	if got := recorder.Header().Get("Content-Type"); got != "application/json" {
+		t.Fatalf("expected content-type application/json, got %q", got)
+	}
+	if got := recorder.Header().Get("WWW-Authenticate"); got != "Bearer" {
+		t.Fatalf("expected WWW-Authenticate Bearer, got %q", got)
+	}
+	const wantBody = `{"error":{"message":"unauthorized","type":"invalid_request_error"}}`
+	if got := recorder.Body.String(); got != wantBody {
+		t.Fatalf("expected body %q, got %q", wantBody, got)
 	}
 }

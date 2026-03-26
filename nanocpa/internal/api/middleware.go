@@ -10,6 +10,7 @@ import (
 func APIKeyMiddleware(allowedKeys []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !access.ValidateBearerAPIKey(r.Header.Get("Authorization"), allowedKeys) {
+			w.Header().Set("WWW-Authenticate", "Bearer")
 			writeAPIError(w, http.StatusUnauthorized, "unauthorized", "invalid_request_error")
 			return
 		}

@@ -4,7 +4,7 @@ import "strings"
 
 func ValidateBearerAPIKey(authorizationHeader string, allowedKeys []string) bool {
 	parts := strings.Fields(authorizationHeader)
-	if len(parts) != 2 || parts[0] != "Bearer" {
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
 		return false
 	}
 
