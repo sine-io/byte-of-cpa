@@ -48,7 +48,7 @@ func TestLoad_InvalidYAML(t *testing.T) {
 func TestLoad_HostRequired(t *testing.T) {
 	t.Parallel()
 
-	_, err := loadConfig(t, "host: \"\"\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n")
+	_, err := loadConfig(t, "port: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n")
 	if err == nil {
 		t.Fatal("expected validation error for missing host")
 	}
@@ -115,27 +115,27 @@ func TestValidate_MissingProviderFields(t *testing.T) {
 	}{
 		{
 			name: "missing id",
-			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: \"\"\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
+			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
 			wantErr: "providers[0].id is required",
 		},
 		{
 			name: "missing provider",
-			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: \"\"\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
+			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
 			wantErr: "providers[0].provider is required",
 		},
 		{
 			name: "missing api_key",
-			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: \"\"\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
+			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
 			wantErr: "providers[0].api_key is required",
 		},
 		{
 			name: "missing base_url",
-			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: \"\"\n    models:\n      - claude-3-7-sonnet\n",
+			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    models:\n      - claude-3-7-sonnet\n",
 			wantErr: "providers[0].base_url is required",
 		},
 		{
 			name: "missing models",
-			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models: []\n",
+			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n",
 			wantErr: "providers[0].models must contain at least one model",
 		},
 	}
