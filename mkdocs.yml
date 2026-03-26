@@ -32,27 +32,39 @@ markdown_extensions:
   - toc:
       permalink: true
 plugins:
+  - i18n:
+      docs_structure: folder
+      reconfigure_material: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+          nav:
+            - Home: index.md
+            - Chapter Guide: chapter-guide.md
+            - Chapters:
+                - Chapter 01 Bootstrap: chapters/01-bootstrap.md
+                - Chapter 02 Config: chapters/02-config.md
+                - Chapter 03 Access: chapters/03-access.md
+                - Chapter 04 OpenAI Surface: chapters/04-openai-surface.md
+                - Chapter 05 Model Registry: chapters/05-model-registry.md
+                - Chapter 06 Runtime Skeleton: chapters/06-runtime-skeleton.md
+                - Chapter 07 Claude Provider: chapters/07-claude-provider.md
+                - Chapter 08 Routing and Hardening: chapters/08-routing-and-hardening.md
+        - locale: zh
+          name: 中文
+          build: true
+          nav:
+            - 首页: index.md
+            - 导览: chapter-guide.md
+            - 教程章节:
+                - 第 01 章 启动: chapters/01-bootstrap.md
+                - 第 02 章 配置: chapters/02-config.md
+                - 第 03 章 鉴权: chapters/03-access.md
+                - 第 04 章 OpenAI 接口面: chapters/04-openai-surface.md
+                - 第 05 章 模型注册表: chapters/05-model-registry.md
+                - 第 06 章 运行时骨架: chapters/06-runtime-skeleton.md
+                - 第 07 章 Claude Provider: chapters/07-claude-provider.md
+                - 第 08 章 路由与加固: chapters/08-routing-and-hardening.md
   - search
-nav:
-  - Home: index.md
-  - Chapter Guide: chapters/README.md
-  - English Chapters:
-      - Chapter 01 Bootstrap: chapters/01-bootstrap.md
-      - Chapter 02 Config: chapters/02-config.md
-      - Chapter 03 Access: chapters/03-access.md
-      - Chapter 04 OpenAI Surface: chapters/04-openai-surface.md
-      - Chapter 05 Model Registry: chapters/05-model-registry.md
-      - Chapter 06 Runtime Skeleton: chapters/06-runtime-skeleton.md
-      - Chapter 07 Claude Provider: chapters/07-claude-provider.md
-      - Chapter 08 Routing and Hardening: chapters/08-routing-and-hardening.md
-  - 中文首页: zh/index.md
-  - 中文导览: zh/chapter-guide.md
-  - 中文章节:
-      - 第 01 章 启动: zh/chapters/01-bootstrap.md
-      - 第 02 章 配置: zh/chapters/02-config.md
-      - 第 03 章 鉴权: zh/chapters/03-access.md
-      - 第 04 章 OpenAI 接口面: zh/chapters/04-openai-surface.md
-      - 第 05 章 模型注册表: zh/chapters/05-model-registry.md
-      - 第 06 章 运行时骨架: zh/chapters/06-runtime-skeleton.md
-      - 第 07 章 Claude Provider: zh/chapters/07-claude-provider.md
-      - 第 08 章 路由与加固: zh/chapters/08-routing-and-hardening.md

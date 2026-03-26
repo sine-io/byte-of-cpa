@@ -11,7 +11,7 @@ The tutorial is organized as concrete chapter milestones. Each chapter explains:
 
 ## How To Read This Site
 
-1. Start with the [Chapter Guide](chapters/README.md).
+1. Start with the [Chapter Guide](chapter-guide.md).
 2. Read a chapter to understand the design move.
 3. Check out that chapter's tag in Git if you want to inspect the exact snapshot.
 4. Run the verification commands for that chapter.
@@ -30,7 +30,7 @@ The tutorial is organized as concrete chapter milestones. Each chapter explains:
 ## Local Preview
 
 ```bash
-. .venv/bin/activate 2>/dev/null || python -m venv .venv && . .venv/bin/activate
+. .venv/bin/activate 2>/dev/null || python3 -m venv .venv && . .venv/bin/activate
 python -m pip install -r requirements-docs.txt
 mkdocs serve
 ```
