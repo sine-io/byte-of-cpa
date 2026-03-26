@@ -2,7 +2,7 @@ package access
 
 import "testing"
 
-func TestValidateBearerAPIKey_Success(t *testing.T) {
+func TestValidateBearerAPIKey_ValidBearerTokenAccepted(t *testing.T) {
 	t.Parallel()
 
 	ok := ValidateBearerAPIKey("Bearer dev-key", []string{"dev-key", "other-key"})
@@ -11,11 +11,29 @@ func TestValidateBearerAPIKey_Success(t *testing.T) {
 	}
 }
 
-func TestValidateBearerAPIKey_SuccessWithLowercaseBearerScheme(t *testing.T) {
+func TestValidateBearerAPIKey_WrongSchemeRejected(t *testing.T) {
 	t.Parallel()
 
 	ok := ValidateBearerAPIKey("bearer dev-key", []string{"dev-key", "other-key"})
-	if !ok {
-		t.Fatal("expected case-insensitive bearer scheme to be accepted")
+	if ok {
+		t.Fatal("expected wrong scheme to be rejected")
+	}
+}
+
+func TestValidateBearerAPIKey_MissingTokenRejected(t *testing.T) {
+	t.Parallel()
+
+	ok := ValidateBearerAPIKey("Bearer", []string{"dev-key", "other-key"})
+	if ok {
+		t.Fatal("expected missing token to be rejected")
+	}
+}
+
+func TestValidateBearerAPIKey_WrongTokenRejected(t *testing.T) {
+	t.Parallel()
+
+	ok := ValidateBearerAPIKey("Bearer wrong-key", []string{"dev-key", "other-key"})
+	if ok {
+		t.Fatal("expected wrong token to be rejected")
 	}
 }

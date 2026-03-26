@@ -4,11 +4,18 @@ This chapter adds a protected middleware layer so only callers with valid Bearer
 
 ## What Problem This Chapter Solves
 
-Downstream requests must authenticate independently from upstream provider credentials to keep the boundary clear and consistent.
+Downstream caller authentication is a different concern from upstream provider authentication:
+
+- Downstream auth: a client proves it can use this proxy (our `Authorization: Bearer <key>` check).
+- Upstream provider auth: this service proves it can call OpenAI (provider credentials configured on the server side).
+
+Keeping those separate prevents accidental trust leakage between boundaries and makes the access policy explicit at the proxy edge.
 
 ## Why The Previous Chapter Is Not Enough
 
 Configuration makes the server data-driven, but without access checks anybody can send requests. We need a thin middleware guard before unlocking handlers.
+
+Middleware is introduced here (instead of inside handlers) because access control is a cross-cutting transport concern. A single middleware check guarantees unauthorized requests are rejected before route logic runs, keeps handler code focused on business behavior, and gives one stable unauthorized response shape everywhere.
 
 ## New Concepts
 
@@ -18,21 +25,22 @@ Configuration makes the server data-driven, but without access checks anybody ca
 
 ## Implementation
 
-- Start Tag (planned): `chapter-02-config`
-- End Tag (planned): `chapter-03-access`
-- Introduce API key extractor and middleware that validates tokens from headers.
-- Return `401` responses with a stable error body when validation fails.
-- The planned tags will be published once the middleware milestone is recorded so readers can checkout the chapter snapshot.
+- Start Tag: `chapter-02-config`
+- End Tag: `chapter-03-access`
+- API key validation accepts only `Authorization: Bearer <key>` with exact key matching.
+- Middleware blocks invalid or missing credentials with `401`.
+- Unauthorized responses use a stable JSON body:
+  `{"error":{"message":"unauthorized","type":"invalid_request_error"}}`
 
 ## Verification
 
-Planned: `cd nanocpa && go test ./internal/access` to lock down the API key behavior.
+Run: `cd nanocpa && go test ./internal/access`
 
-Planned: `cd nanocpa && go test ./internal/api -run 'Test.*Middleware'` to exercise the access middleware at the service boundary.
+Run: `cd nanocpa && go test ./internal/api -run 'Test.*Unauthorized|Test.*Middleware'`
 
 ## What You Have Now
 
-- A service that refuses unauthorized requests before ever entering the business logic.
+- A service boundary that consistently rejects unauthorized callers before entering downstream handlers.
 
 ## What Comes Next
 
