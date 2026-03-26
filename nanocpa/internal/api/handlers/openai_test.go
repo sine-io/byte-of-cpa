@@ -37,6 +37,36 @@ func TestChatCompletionsSupportedModelStillReturnsStableAPIError(t *testing.T) {
 	}
 }
 
+func TestOpenAI_ServerUsesRuntimeManagerForConfiguredChatModels(t *testing.T) {
+	t.Parallel()
+
+	server := api.NewServer(&config.Config{
+		Host:    "127.0.0.1",
+		Port:    18080,
+		APIKeys: []string{"dev-key"},
+		Providers: []config.Provider{
+			{
+				ID:       "provider-1",
+				Provider: "openai",
+				APIKey:   "key-1",
+				BaseURL:  "https://example.invalid/openai",
+				Models:   []string{"gpt-4o-mini"},
+			},
+		},
+	})
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(`{"model":"gpt-4o-mini","messages":[]}`))
+	req.Header.Set("Authorization", "Bearer dev-key")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 for configured model without executor, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	assertOpenAIError(t, rec, "api_error", "upstream provider request failed")
+}
+
 func TestOpenAI_ServerRegistersRoutesBehindAccessMiddleware(t *testing.T) {
 	t.Parallel()
 
@@ -214,7 +244,7 @@ func TestChatCompletionsRejectsUnsupportedModelBeforeUpstreamHandling(t *testing
 func performAuthorizedRequest(t *testing.T, modelRegistry *registry.ModelRegistry, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 
-	openAI := handlers.NewOpenAI(modelRegistry)
+	openAI := handlers.NewOpenAI(modelRegistry, nil)
 	mux := http.NewServeMux()
 	openAI.RegisterRoutes(mux)
 	handler := api.APIKeyMiddleware([]string{"dev-key"}, mux)

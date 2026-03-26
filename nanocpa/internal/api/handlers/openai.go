@@ -1,23 +1,34 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
 )
 
+type ChatRuntime interface {
+	SupportsModel(model string) bool
+	Execute(ctx context.Context, model string, openAIRequest []byte) (*auth.Result, error)
+}
+
 type OpenAI struct {
 	modelRegistry *registry.ModelRegistry
+	runtime       ChatRuntime
 }
 
 const maxChatCompletionsRequestBodyBytes int64 = 4 * 1024 * 1024
 
-func NewOpenAI(modelRegistry *registry.ModelRegistry) *OpenAI {
-	return &OpenAI{modelRegistry: modelRegistry}
+func NewOpenAI(modelRegistry *registry.ModelRegistry, runtime ChatRuntime) *OpenAI {
+	return &OpenAI{
+		modelRegistry: modelRegistry,
+		runtime:       runtime,
+	}
 }
 
 func (h *OpenAI) RegisterRoutes(mux *http.ServeMux) {
@@ -50,6 +61,23 @@ func (h *OpenAI) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		writeOpenAIError(w, http.StatusBadRequest, "model is required", "invalid_request_error")
 		return
 	}
+
+	if h.runtime != nil {
+		if !h.runtime.SupportsModel(req.Model) {
+			writeOpenAIError(w, http.StatusBadRequest, fmt.Sprintf("model %q is not available", req.Model), "invalid_request_error")
+			return
+		}
+
+		result, err := h.runtime.Execute(r.Context(), req.Model, requestBody)
+		if err != nil || result == nil {
+			writeOpenAIError(w, http.StatusBadGateway, "upstream provider request failed", "api_error")
+			return
+		}
+
+		writeRuntimeResult(w, result)
+		return
+	}
+
 	if h.modelRegistry == nil || len(h.modelRegistry.GetModelProviders(req.Model)) == 0 {
 		writeOpenAIError(w, http.StatusBadRequest, fmt.Sprintf("model %q is not available", req.Model), "invalid_request_error")
 		return
@@ -83,6 +111,25 @@ func (h *OpenAI) Models(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(response)
+}
+
+func writeRuntimeResult(w http.ResponseWriter, result *auth.Result) {
+	for key, values := range result.Headers {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	}
+
+	statusCode := result.StatusCode
+	if statusCode == 0 {
+		statusCode = http.StatusOK
+	}
+
+	w.WriteHeader(statusCode)
+	if len(result.Body) == 0 {
+		return
+	}
+	_, _ = w.Write(result.Body)
 }
 
 func writeOpenAIError(w http.ResponseWriter, statusCode int, message, errorType string) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/api/handlers"
+	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/auth"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v6/nanocpa/internal/registry"
 )
@@ -22,7 +23,8 @@ func NewServer(cfg *config.Config) *Server {
 	handler := http.Handler(http.NewServeMux())
 	if cfg != nil {
 		modelRegistry := buildModelRegistry(cfg)
-		openAI := handlers.NewOpenAI(modelRegistry)
+		runtimeManager := buildRuntimeManager(cfg, modelRegistry)
+		openAI := handlers.NewOpenAI(modelRegistry, runtimeManager)
 		mux := http.NewServeMux()
 		openAI.RegisterRoutes(mux)
 		handler = APIKeyMiddleware(cfg.APIKeys, mux)
@@ -81,4 +83,29 @@ func buildModelRegistry(cfg *config.Config) *registry.ModelRegistry {
 	}
 
 	return modelRegistry
+}
+
+func buildRuntimeManager(cfg *config.Config, modelRegistry *registry.ModelRegistry) *auth.Manager {
+	runtimeManager := auth.NewManager(modelRegistry, nil)
+	if cfg == nil {
+		return runtimeManager
+	}
+
+	now := time.Now()
+	for _, provider := range cfg.Providers {
+		runtimeManager.RegisterAuth(&auth.Auth{
+			ID:       provider.ID,
+			Provider: provider.Provider,
+			Label:    provider.ID,
+			Status:   auth.StatusActive,
+			Attributes: map[string]string{
+				"api_key":  provider.APIKey,
+				"base_url": provider.BaseURL,
+			},
+			CreatedAt: now,
+			UpdatedAt: now,
+		})
+	}
+
+	return runtimeManager
 }
