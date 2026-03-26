@@ -22,6 +22,8 @@ Each chapter is planned to end with a stable git tag (`chapter-01-bootstrap` thr
 
 ## Chapters
 
+Each chapter doc captures a planned milestone: the problem it solves, the architectural change, the associated Start/End tags, and the verification guidance readers can follow once that milestone is implemented and published.
+
 1. [Chapter 01: Bootstrap](docs/chapters/01-bootstrap.md) — start a safe HTTP server with explicit construction boundaries, timeouts, and no downstream surface yet.
 2. [Chapter 02: Config](docs/chapters/02-config.md) — load and validate YAML configuration so upstreams and access rules become data-driven, not hard-coded.
 3. [Chapter 03: Access](docs/chapters/03-access.md) — add middleware that enforces downstream Bearer API keys to separate downstream auth from upstream credentials.

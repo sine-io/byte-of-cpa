@@ -26,7 +26,7 @@ The runtime skeleton exists, but no provider code uses it yet. Without a concret
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/translator ./internal/runtime/executor ./internal/api/...`
+Planned: `cd nanocpa && go test ./internal/translator ./internal/runtime/executor ./internal/api/...` once the Claude executor and translator are wired.
 
 ## What You Have Now
 

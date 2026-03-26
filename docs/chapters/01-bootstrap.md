@@ -26,7 +26,7 @@ Start here: there isn’t any previous chapter. The bootstrapping work moves the
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/api -run 'TestServer_'`
+Planned: `cd nanocpa && go test ./internal/api -run 'TestServer_'` once the bootstrap milestone is implemented and tagged.
 
 ## What You Have Now
 

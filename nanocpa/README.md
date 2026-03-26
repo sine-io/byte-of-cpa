@@ -8,11 +8,16 @@ NanoCPA contains the working tutorial code referenced by the chapters in `docs/c
 - `docs/chapters/` contains the guided walkthrough. Each chapter defines a `Start Tag` and `End Tag` (see chapter files for the explicit tags). The tags mark the teaching milestones and let readers checkout each chapter's exact code.
 - Tags are planned milestones that will be published once each chapter is complete; readers can checkout the chapter's End Tag to review that milestone's code once it exists.
 
-## Reader Flow
+## Roadmap Mode
 
-- `nanocpa/` always contains the living code; start from the baseline commit or the most recent published chapter tag that exists.
-- Each chapter doc names the planned `chapter-XX-...` tag that will be published when the milestone is ready; readers can checkout that tag once it appears to revisit the snapshot.
-- Run the verification commands in the chapter docs before moving on. When the next End Tag is published, checkout that tag to continue the tutorial.
+- `nanocpa/` always contains the living code; start from the baseline commit (`git checkout 62f02a2`) or the most recent published chapter tag, if any exist.
+- Read each chapter doc to understand the planned change, the Start/End tags, and the verification commands to run once the milestone is implemented.
+- Execute the verification steps when the chapter code is ready, then move toward the next planned tag.
+
+## Snapshot Mode
+
+- Once a chapter tag is published, checkout its Start Tag to examine that milestone.
+- Run the chapter's verification commands to confirm the behavior, then check out the End Tag when you're ready to progress to the next chapter.
 
 ## Config
 

@@ -26,7 +26,7 @@ The OpenAI handlers exist, but they have no idea which models are real versus ha
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/registry ./internal/api/...`
+Planned: `cd nanocpa && go test ./internal/registry ./internal/api/...` once the registry wiring is in place.
 
 ## What You Have Now
 

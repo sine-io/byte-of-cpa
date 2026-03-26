@@ -26,8 +26,9 @@ Claude requests now succeed, but only with a single upstream. Real CPAs need rou
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/auth ./internal/api -run 'TestManager_|TestServer_'`
-- `cd nanocpa && go test ./...`
+Planned: `cd nanocpa && go test ./internal/auth ./internal/api -run 'TestManager_|TestServer_'` to exercise routing and server boundaries.
+
+Planned: `cd nanocpa && go test ./...` to confirm the entire minimal CPA surface remains stable once this chapter lands.
 
 ## What You Have Now
 

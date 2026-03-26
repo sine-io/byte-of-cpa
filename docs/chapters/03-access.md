@@ -26,8 +26,9 @@ Configuration makes the server data-driven, but without access checks anybody ca
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/access`
-- `cd nanocpa && go test ./internal/api -run 'Test.*Middleware'`
+Planned: `cd nanocpa && go test ./internal/access` to lock down the API key behavior.
+
+Planned: `cd nanocpa && go test ./internal/api -run 'Test.*Middleware'` to exercise the access middleware at the service boundary.
 
 ## What You Have Now
 

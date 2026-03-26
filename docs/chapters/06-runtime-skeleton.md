@@ -26,8 +26,9 @@ Model availability is known, but the runtime still handles requests directly fro
 
 ## Verification
 
-+ `cd nanocpa && go test ./internal/auth ./internal/registry`
-+ `cd nanocpa && go test ./internal/api -run 'TestServer_'`
+Planned: `cd nanocpa && go test ./internal/auth ./internal/registry` to validate the manager/selector wiring.
+
+Planned: `cd nanocpa && go test ./internal/api -run 'TestServer_'` to confirm the server boots against the new runtime skeleton.
 
 ## What You Have Now
 

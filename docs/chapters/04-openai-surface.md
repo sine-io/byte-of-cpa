@@ -26,7 +26,7 @@ Access control is in place, but the service does not yet speak the protocols dow
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/api/... -run 'TestOpenAI|TestChatCompletions|TestModels'`
+Planned: `cd nanocpa && go test ./internal/api/... -run 'TestOpenAI|TestChatCompletions|TestModels'` once the downstream handlers are implemented.
 
 ## What You Have Now
 
