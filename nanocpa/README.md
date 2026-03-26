@@ -1,8 +1,6 @@
 # NanoCPA
 
-# NanoCPA
-
-NanoCPA is the working tutorial implementation for the chapters in `docs/chapters/`. The code here represents the current milestone of the `byte-of-cpa` tutorial, and each chapter document in `docs/chapters/` explains how to reach the next milestone.
+NanoCPA contains the working tutorial code referenced by the chapters in `docs/chapters/`. Each chapter document describes a teaching milestone and points to the published tag that captures the code for that milestone so readers can follow along.
 
 ## Tutorial Structure
 
