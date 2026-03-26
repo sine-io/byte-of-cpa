@@ -5,19 +5,20 @@ NanoCPA contains the working tutorial code referenced by the chapters in `docs/c
 ## Tutorial Structure
 
 - `nanocpa/` holds the runnable code that the tutorial walks through; treat it as the working tree readers build toward chapter by chapter.
-- `docs/chapters/` contains the guided walkthrough. Each chapter defines a `Start Tag` and `End Tag` (see chapter files for the explicit tags). The tags mark the teaching milestones and let readers checkout each chapter's exact code.
+- `docs/chapters/` contains the guided walkthrough. Each chapter defines a start reference and a planned `End Tag`; later chapters start from the previous chapter's published milestone, while Chapter 1 starts from baseline commit `62f02a2`.
 - Tags are planned milestones that will be published once each chapter is complete; readers can checkout the chapter's End Tag to review that milestone's code once it exists.
 
 ## Roadmap Mode
 
-- `nanocpa/` always contains the living code; start from the baseline commit (`git checkout 62f02a2`) or the most recent published chapter tag, if any exist.
-- Read each chapter doc to understand the planned change, the Start/End tags, and the verification commands to run once the milestone is implemented.
-- Execute the verification steps when the chapter code is ready, then move toward the next planned tag.
+- `nanocpa/` always contains the living code; start from the baseline commit (`git checkout 62f02a2`) for Chapter 1, or from the published prior milestone for later chapters.
+- Read each chapter doc to understand the planned change, the start reference, the planned End Tag, and the verification commands to run once the milestone is implemented.
+- Execute the verification steps when the chapter code is ready, then move toward the next planned milestone.
 
 ## Snapshot Mode
 
-- Once a chapter tag is published, checkout its Start Tag to examine that milestone.
-- Run the chapter's verification commands to confirm the behavior, then check out the End Tag when you're ready to progress to the next chapter.
+- Once a chapter tag is published, checkout that chapter's End Tag to inspect the milestone snapshot.
+- For Chapter 1, the starting point is baseline commit `62f02a2`, and the first published snapshot is `chapter-01-bootstrap`.
+- Run the chapter's verification commands to confirm the behavior, then move to the next published End Tag when you're ready to progress.
 
 ## Config
 

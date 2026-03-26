@@ -26,7 +26,7 @@ The bootstrap server compiles but relies on constants. Without config validation
 
 ## Verification
 
-- `cd nanocpa && go test ./internal/config`
+Planned: `cd nanocpa && go test ./internal/config` once the config milestone is implemented and tagged.
 
 ## What You Have Now
 

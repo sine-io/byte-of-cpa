@@ -32,7 +32,7 @@ Each chapter builds on the previous one in a single linear progression. The Star
 
 ## Snapshot Mode
 
-1. After a chapter milestone is tagged, checkout the Start Tag for that chapter; for Chapter 1, there is no Start Tag, so checkout `chapter-01-bootstrap` to view the first milestone snapshot.
+1. After a chapter milestone is tagged, checkout that chapter's published End Tag to inspect the snapshot. For Chapter 1, the start reference remains baseline commit `62f02a2` (`git checkout 62f02a2`), while the first published milestone snapshot is `chapter-01-bootstrap`.
 2. Run the verification commands documented in the chapter to confirm the milestone's behavior.
 3. When you are ready for the next milestone, checkout the next published End Tag and repeat.
 
