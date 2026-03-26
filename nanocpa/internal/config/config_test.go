@@ -4,47 +4,42 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
 
-func TestLoad_MinimalBootstrapConfig(t *testing.T) {
+func TestLoad_Chapter2Snapshot(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := loadConfig(t, validChapter2ConfigYAML())
+	cfg, err := Load(chapter2ExampleConfigPath(t))
 	if err != nil {
 		t.Fatalf("load config: %v", err)
 	}
 
-	if cfg.Host != "127.0.0.1" {
-		t.Fatalf("unexpected host: %q", cfg.Host)
+	want := &Config{
+		Host:    "127.0.0.1",
+		Port:    8317,
+		APIKeys: []string{"dev-key"},
+		Providers: []Provider{
+			{
+				ID:       "claude-primary",
+				Provider: "claude",
+				APIKey:   "your-claude-api-key",
+				BaseURL:  "https://api.anthropic.com",
+				Models:   []string{"claude-3-7-sonnet"},
+			},
+			{
+				ID:       "openai-primary",
+				Provider: "openai",
+				APIKey:   "your-openai-api-key",
+				BaseURL:  "https://api.openai.com",
+				Models:   []string{"gpt-4o-mini"},
+			},
+		},
 	}
-	if cfg.Port != 8317 {
-		t.Fatalf("unexpected port: %d", cfg.Port)
-	}
-	wantAPIKeys := []string{"down-key-1", "down-key-2"}
-	if !reflect.DeepEqual(cfg.APIKeys, wantAPIKeys) {
-		t.Fatalf("unexpected api_keys: got=%v want=%v", cfg.APIKeys, wantAPIKeys)
-	}
-	if len(cfg.Providers) != 1 {
-		t.Fatalf("unexpected providers length: %d", len(cfg.Providers))
-	}
-	provider := cfg.Providers[0]
-	if provider.ID != "claude-primary" {
-		t.Fatalf("unexpected provider id: %q", provider.ID)
-	}
-	if provider.Provider != "claude" {
-		t.Fatalf("unexpected provider provider: %q", provider.Provider)
-	}
-	if provider.APIKey != "up-key-1" {
-		t.Fatalf("unexpected provider api_key: %q", provider.APIKey)
-	}
-	if provider.BaseURL != "https://api.anthropic.com" {
-		t.Fatalf("unexpected provider base_url: %q", provider.BaseURL)
-	}
-	wantModels := []string{"claude-3-7-sonnet"}
-	if !reflect.DeepEqual(provider.Models, wantModels) {
-		t.Fatalf("unexpected provider models: got=%v want=%v", provider.Models, wantModels)
+	if !reflect.DeepEqual(cfg, want) {
+		t.Fatalf("unexpected chapter 2 snapshot config: got=%+v want=%+v", cfg, want)
 	}
 }
 
@@ -58,6 +53,38 @@ func TestLoad_TrimsHost(t *testing.T) {
 
 	if cfg.Host != "127.0.0.1" {
 		t.Fatalf("unexpected host: %q", cfg.Host)
+	}
+}
+
+func TestLoad_NormalizesChapter2Fields(t *testing.T) {
+	t.Parallel()
+
+	cfg, err := loadConfig(t, "host: \" 127.0.0.1 \"\nport: 8317\napi_keys:\n  - \" down-key-1 \"\nproviders:\n  - id: \" provider-1 \"\n    provider: \" CLAUDE \"\n    api_key: \" up-key-1 \"\n    base_url: \" https://api.anthropic.com \"\n    models:\n      - \" claude-3-7-sonnet \"\n")
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.APIKeys, []string{"down-key-1"}) {
+		t.Fatalf("unexpected normalized api_keys: %v", cfg.APIKeys)
+	}
+	if len(cfg.Providers) != 1 {
+		t.Fatalf("unexpected providers length: %d", len(cfg.Providers))
+	}
+	p := cfg.Providers[0]
+	if p.ID != "provider-1" {
+		t.Fatalf("unexpected normalized provider id: %q", p.ID)
+	}
+	if p.Provider != "claude" {
+		t.Fatalf("unexpected normalized provider type: %q", p.Provider)
+	}
+	if p.APIKey != "up-key-1" {
+		t.Fatalf("unexpected normalized provider api_key: %q", p.APIKey)
+	}
+	if p.BaseURL != "https://api.anthropic.com" {
+		t.Fatalf("unexpected normalized provider base_url: %q", p.BaseURL)
+	}
+	if !reflect.DeepEqual(p.Models, []string{"claude-3-7-sonnet"}) {
+		t.Fatalf("unexpected normalized provider models: %v", p.Models)
 	}
 }
 
@@ -204,10 +231,6 @@ func TestValidate_UnsupportedProviderValue(t *testing.T) {
 	}
 }
 
-func validChapter2ConfigYAML() string {
-	return "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\n  - down-key-2\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n"
-}
-
 func loadConfig(t *testing.T, yamlContent string) (*Config, error) {
 	t.Helper()
 
@@ -218,4 +241,14 @@ func loadConfig(t *testing.T, yamlContent string) (*Config, error) {
 	}
 
 	return Load(configPath)
+}
+
+func chapter2ExampleConfigPath(t *testing.T) string {
+	t.Helper()
+
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve current file path")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(currentFile), "..", "..", "config.example.yaml"))
 }
