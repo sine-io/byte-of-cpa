@@ -18,11 +18,11 @@ This material targets programmers who are already comfortable reading Go code an
 
 ## How Chapter Tags Work
 
-Each chapter is planned to end with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). As of 2026-03-26, no `chapter-*` tags are published yet and the chapter-by-chapter history rewrite has not landed. During that rewrite, commit `62f02a2` is only a temporary pre-tag reference, not a published Chapter 1 snapshot. The **docs/chapters/README.md** file separates the roadmap from the future snapshot navigation.
+Each chapter ends with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). Chapter 1 starts from the pre-chapter baseline commit `62f02a2`, and every later chapter starts from the previous chapter's tag. The [chapter guide](docs/chapters/README.md) lists the exact sequence and verification commands.
 
 ## Chapters
 
-Each chapter doc captures a planned milestone: the problem it solves, the architectural change, the associated Start/End tags, and the verification guidance readers can follow once that milestone is implemented and published.
+Each chapter doc captures a concrete milestone: the problem it solves, the architectural change, the associated Start/End references, and the verification commands for that snapshot.
 
 1. [Chapter 01: Bootstrap](docs/chapters/01-bootstrap.md) — start a safe HTTP server with explicit construction boundaries, timeouts, and no downstream surface yet.
 2. [Chapter 02: Config](docs/chapters/02-config.md) — load and validate YAML configuration so upstreams and access rules become data-driven, not hard-coded.
