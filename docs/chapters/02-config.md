@@ -37,7 +37,7 @@ The bootstrap server compiles but relies on constants and a minimal schema. With
 ## Verification
 
 Run:
-- `cd nanocpa && go test ./internal/config -run 'TestConfig|TestLoad|TestValidate'`
+- `cd nanocpa && go test ./internal/config -run 'TestLoad|TestValidate'`
 - `cd nanocpa && go test ./internal/config`
 
 ## What You Have Now
