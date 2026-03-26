@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -20,6 +21,30 @@ func TestLoad_MinimalBootstrapConfig(t *testing.T) {
 	}
 	if cfg.Port != 8317 {
 		t.Fatalf("unexpected port: %d", cfg.Port)
+	}
+	wantAPIKeys := []string{"down-key-1", "down-key-2"}
+	if !reflect.DeepEqual(cfg.APIKeys, wantAPIKeys) {
+		t.Fatalf("unexpected api_keys: got=%v want=%v", cfg.APIKeys, wantAPIKeys)
+	}
+	if len(cfg.Providers) != 1 {
+		t.Fatalf("unexpected providers length: %d", len(cfg.Providers))
+	}
+	provider := cfg.Providers[0]
+	if provider.ID != "claude-primary" {
+		t.Fatalf("unexpected provider id: %q", provider.ID)
+	}
+	if provider.Provider != "claude" {
+		t.Fatalf("unexpected provider provider: %q", provider.Provider)
+	}
+	if provider.APIKey != "up-key-1" {
+		t.Fatalf("unexpected provider api_key: %q", provider.APIKey)
+	}
+	if provider.BaseURL != "https://api.anthropic.com" {
+		t.Fatalf("unexpected provider base_url: %q", provider.BaseURL)
+	}
+	wantModels := []string{"claude-3-7-sonnet"}
+	if !reflect.DeepEqual(provider.Models, wantModels) {
+		t.Fatalf("unexpected provider models: got=%v want=%v", provider.Models, wantModels)
 	}
 }
 
@@ -101,6 +126,18 @@ func TestValidate_EmptyAPIKeys(t *testing.T) {
 		t.Fatal("expected validation error for empty api_keys")
 	}
 	if !strings.Contains(err.Error(), "api_keys must contain at least one key") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidate_EmptyProviders(t *testing.T) {
+	t.Parallel()
+
+	_, err := loadConfig(t, "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders: []\n")
+	if err == nil {
+		t.Fatal("expected validation error for empty providers")
+	}
+	if !strings.Contains(err.Error(), "providers must contain at least one provider") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

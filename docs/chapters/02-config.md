@@ -19,8 +19,8 @@ The bootstrap server compiles but relies on constants and a minimal schema. With
 
 ## Implementation
 
-- Start Tag (planned): `chapter-01-bootstrap`
-- End Tag (planned): `chapter-02-config`
+- Start Tag: `chapter-01-bootstrap`
+- End Tag: `chapter-02-config`
 - Expand config schema to first-edition fields only:
   - `host`
   - `port`
