@@ -63,6 +63,30 @@ func TestOpenAI_ServerRegistersRoutesBehindAccessMiddleware(t *testing.T) {
 	}
 }
 
+func TestOpenAI_ServerRejectsUnauthorizedRequestsBeforeRouteHandlers(t *testing.T) {
+	t.Parallel()
+
+	server := api.NewServer(&config.Config{
+		Host:    "127.0.0.1",
+		Port:    18080,
+		APIKeys: []string{"dev-key"},
+	})
+	req := httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer wrong-key")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 when bearer token is invalid, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if got := rec.Header().Get("WWW-Authenticate"); got != "Bearer" {
+		t.Fatalf("expected WWW-Authenticate Bearer, got %q", got)
+	}
+
+	assertOpenAIError(t, rec, "invalid_request_error", "unauthorized")
+}
+
 func TestChatCompletionsInvalidJSONReturnsOpenAIStyleError(t *testing.T) {
 	t.Parallel()
 

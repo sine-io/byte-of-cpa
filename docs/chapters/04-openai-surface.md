@@ -31,13 +31,12 @@ This is why Chapter 04 returns a stable API error even though no runner exists y
 
 ## Implementation
 
-- Start Tag (planned): `chapter-03-access`
-- End Tag (planned): `chapter-04-openai-surface`
+- Start Tag: `chapter-03-access`
+- End Tag: `chapter-04-openai-surface`
 - Register the chat and models handlers behind the access middleware.
 - Validate request bodies, enforce content limits, and return consistent OpenAI-style errors.
 - Return the OpenAI `list` response shape for `GET /v1/models` even before any models are exposed.
 - Return a stable `502 api_error` for chat requests that pass boundary validation but still have no upstream implementation.
-- Once the chapter is finalized the planned tags will be published so readers can inspect the resulting snapshot.
 
 ## Verification
 
