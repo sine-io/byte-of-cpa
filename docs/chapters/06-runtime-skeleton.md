@@ -18,10 +18,11 @@ Model availability is known, but the runtime still handles requests directly fro
 
 ## Implementation
 
-- Start Tag: `chapter-05-model-registry`
-- End Tag: `chapter-06-runtime-skeleton`
+- Start Tag (planned): `chapter-05-model-registry`
+- End Tag (planned): `chapter-06-runtime-skeleton`
 - Define runtime interfaces and implement a manager that routes requests to executors via selectors.
 - Wire the server setup to create auths from config and register them with the manager.
+- These planned tags will be published once the runtime skeleton milestone is complete so the snapshot is accessible.
 
 ## Verification
 

@@ -18,10 +18,11 @@ Access control is in place, but the service does not yet speak the protocols dow
 
 ## Implementation
 
-- Start Tag: `chapter-03-access`
-- End Tag: `chapter-04-openai-surface`
+- Start Tag (planned): `chapter-03-access`
+- End Tag (planned): `chapter-04-openai-surface`
 - Register the chat and models handlers behind the access middleware.
 - Validate request bodies, enforce content limits, and return consistent errors.
+- Once the chapter is finalized the planned tags will be published so readers can inspect the resulting snapshot.
 
 ## Verification
 

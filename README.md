@@ -1,6 +1,6 @@
 # Byte of CPA Tutorial
 
-The `byte-of-cpa` repository is a tutorial-first guide to building a minimal CPA (Chatbot Proxy API) while walking readers through a controlled progression from a bare service to a routed, multi-provider proxy.
+The `byte-of-cpa` repository is a tutorial-first guide to building a minimal CPA (Chatbot Proxy API) while walking readers through a controlled progression from a bare service to a routed CPA that currently exposes the Claude provider while remaining architected to admit additional providers later.
 
 ## Purpose
 
@@ -18,7 +18,7 @@ This material targets programmers who are already comfortable reading Go code an
 
 ## How Chapter Tags Work
 
-Each chapter ends with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). Readers can check out the tag named in the chapter's **End Tag** line to see the exact code at that milestone. The **Start Tag** is the previous chapter's end tag (or `pre-tutorial` for chapter 1). The **docs/chapters/README.md** file documents the tag order and verification expectations.
+Each chapter is planned to end with a stable git tag (`chapter-01-bootstrap` through `chapter-08-routing-and-hardening`). Once those tags are published, readers can check out the tag named in the chapter's **End Tag** line to see the exact code at that milestone. The **Start Tag** is the previous chapter's end tag (or `pre-tutorial` for chapter 1). The **docs/chapters/README.md** file documents the tag order and verification expectations.
 
 ## Chapters
 

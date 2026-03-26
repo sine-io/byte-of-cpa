@@ -18,10 +18,11 @@ The bootstrap server compiles but relies on constants. Without config validation
 
 ## Implementation
 
-- Start Tag: `chapter-01-bootstrap`
-- End Tag: `chapter-02-config`
+- Start Tag (planned): `chapter-01-bootstrap`
+- End Tag (planned): `chapter-02-config`
 - Add structs for hosts, ports, API keys, providers, and models.
 - Load the config file, normalize defaults, validate required fields, and fail fast on bad input.
+- The planned tags will be published after the chapter is complete so readers can revisit the snapshot.
 
 ## Verification
 

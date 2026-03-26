@@ -8,7 +8,7 @@ It shows how a CPA balances work across multiple configured upstreams and guards
 
 ## Why The Previous Chapter Is Not Enough
 
-Claude requests now succeed, but only with a single upstream. Real CNAs need routing and better error hygiene to stay reliable at scale.
+Claude requests now succeed, but only with a single upstream. Real CPAs need routing and better error hygiene to stay reliable at scale.
 
 ## New Concepts
 
@@ -18,10 +18,11 @@ Claude requests now succeed, but only with a single upstream. Real CNAs need rou
 
 ## Implementation
 
-- Start Tag: `chapter-07-claude-provider`
-- End Tag: `chapter-08-routing-and-hardening`
+- Start Tag (planned): `chapter-07-claude-provider`
+- End Tag (planned): `chapter-08-routing-and-hardening`
 - Implement deterministic per-model round-robin selector behavior and SKIP disabled auths.
 - Improve downstream error handling so validation errors return `invalid_request_error` objects and upstream failures are normalized.
+- These planned tags will be published once the routing and hardening milestone is complete so readers can inspect the stabilized snapshot.
 
 ## Verification
 

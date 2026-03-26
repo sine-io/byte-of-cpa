@@ -18,10 +18,11 @@ The OpenAI handlers exist, but they have no idea which models are real versus ha
 
 ## Implementation
 
-- Start Tag: `chapter-04-openai-surface`
-- End Tag: `chapter-05-model-registry`
+- Start Tag (planned): `chapter-04-openai-surface`
+- End Tag (planned): `chapter-05-model-registry`
 - Build a registry that records models per provider and exposes lookup helpers.
 - Wire `/v1/models` to the registry and enforce support checks in the chat handler.
+- The planned tags will be published with the chapter so readers can review the model registry milestone.
 
 ## Verification
 

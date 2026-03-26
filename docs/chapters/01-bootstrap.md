@@ -18,10 +18,11 @@ Start here: there isn’t any previous chapter. The bootstrapping work moves the
 
 ## Implementation
 
-- Start Tag: `pre-tutorial`
-- End Tag: `chapter-01-bootstrap`
+- Start Tag (planned): `pre-tutorial`
+- End Tag (planned): `chapter-01-bootstrap`
 - Build a `main` function that loads config and creates a server.
 - Keep the server simple: no auth, no handlers, only timeouts and listen address wiring.
+- These planned tags will be published once the chapter milestone is recorded so readers can jump directly to the completed snapshot.
 
 ## Verification
 

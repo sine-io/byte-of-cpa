@@ -18,10 +18,11 @@ The runtime skeleton exists, but no provider code uses it yet. Without a concret
 
 ## Implementation
 
-- Start Tag: `chapter-06-runtime-skeleton`
-- End Tag: `chapter-07-claude-provider`
+- Start Tag (planned): `chapter-06-runtime-skeleton`
+- End Tag (planned): `chapter-07-claude-provider`
 - Write translators and executor code that send `POST /v1/messages` to Claude with `x-api-key` and `anthropic-version: 2023-06-01`.
 - Translate Claude responses back into OpenAI-compatible chat completions.
+- The planned tags will be published once the Claude provider milestone is tagged so the snapshot is available.
 
 ## Verification
 

@@ -1,12 +1,12 @@
 # Chapter Guide
 
-This directory holds the guided walkthrough. Each chapter file explains the problem, the code change, the verification produced, and how the milestone maps to a stable git tag.
+This directory holds the guided walkthrough. Each chapter file explains the problem, the code change, the verification produced, and how the milestone maps to a planned stable git tag.
 
 ## Chapter Order
 
 Each chapter builds on the previous one in a single linear progression. The Start Tag for a chapter is the End Tag of the prior chapter (or `pre-tutorial` for chapter 1). The End Tag names the commit readers can checkout to review or return to that milestone.
 
-| Chapter | Start Tag | End Tag | Verification |
+| Chapter | Start Tag (planned) | End Tag (planned) | Verification |
 | --- | --- | --- | --- |
 | 01 Bootstrap | `pre-tutorial` | `chapter-01-bootstrap` | `cd nanocpa && go test ./internal/api -run 'TestServer_'` |
 | 02 Config | `chapter-01-bootstrap` | `chapter-02-config` | `cd nanocpa && go test ./internal/config` |
@@ -21,15 +21,14 @@ Each chapter builds on the previous one in a single linear progression. The Star
 
 - Chapter tags all use the prefix `chapter-` followed by a two-digit number and a short name (e.g., `chapter-04-openai-surface`).
 - Start tags are the prior chapter's end tag; the first chapter begins at `pre-tutorial` because there is no prior tutorial tag.
-- After finishing a chapter, tag the commit with the End Tag so readers can checkout that milestone.
+- These tag names are planned milestones. Maintainers will publish the tags when a chapter is complete so readers can checkout the referenced commits.
 
 ## Moving Between Chapters
 
-1. Checkout the current chapter's Start Tag (or `pre-tutorial`).
+1. Checkout the current chapter's Start Tag (or `pre-tutorial`) once the corresponding tag is published.
 2. Follow the chapter document to understand the goal and walk through the implementation.
 3. Run the verification command listed in the chapter's `## Verification` section to confirm the milestone.
-4. Tag the commit with the End Tag to preserve the milestone.
-5. Use the End Tag as the Start Tag for the next chapter.
+4. When ready to continue, checkout the chapter's End Tag (once published) before moving on to the next chapter.
 
 ## Verification Expectations
 

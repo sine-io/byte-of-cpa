@@ -18,10 +18,11 @@ Configuration makes the server data-driven, but without access checks anybody ca
 
 ## Implementation
 
-- Start Tag: `chapter-02-config`
-- End Tag: `chapter-03-access`
+- Start Tag (planned): `chapter-02-config`
+- End Tag (planned): `chapter-03-access`
 - Introduce API key extractor and middleware that validates tokens from headers.
 - Return `401` responses with a stable error body when validation fails.
+- The planned tags will be published once the middleware milestone is recorded so readers can checkout the chapter snapshot.
 
 ## Verification
 
