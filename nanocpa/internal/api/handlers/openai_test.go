@@ -83,6 +83,13 @@ func TestOpenAI_ServerRejectsUnauthorizedRequestsBeforeRouteHandlers(t *testing.
 	if got := rec.Header().Get("WWW-Authenticate"); got != "Bearer" {
 		t.Fatalf("expected WWW-Authenticate Bearer, got %q", got)
 	}
+	if got := rec.Header().Get("Content-Type"); !strings.Contains(got, "application/json") {
+		t.Fatalf("expected JSON content type, got %q", got)
+	}
+	const wantBody = `{"error":{"message":"unauthorized","type":"invalid_request_error"}}`
+	if got := strings.TrimSpace(rec.Body.String()); got != wantBody {
+		t.Fatalf("expected body %q, got %q", wantBody, got)
+	}
 
 	assertOpenAIError(t, rec, "invalid_request_error", "unauthorized")
 }
