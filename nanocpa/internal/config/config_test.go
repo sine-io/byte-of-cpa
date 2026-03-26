@@ -178,29 +178,29 @@ func TestValidate_MissingProviderFields(t *testing.T) {
 		wantErr     string
 	}{
 		{
-			name: "missing id",
+			name:        "missing id",
 			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
-			wantErr: "providers[0].id is required",
+			wantErr:     "providers[0].id is required",
 		},
 		{
-			name: "missing provider",
+			name:        "missing provider",
 			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
-			wantErr: "providers[0].provider is required",
+			wantErr:     "providers[0].provider is required",
 		},
 		{
-			name: "missing api_key",
+			name:        "missing api_key",
 			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n",
-			wantErr: "providers[0].api_key is required",
+			wantErr:     "providers[0].api_key is required",
 		},
 		{
-			name: "missing base_url",
+			name:        "missing base_url",
 			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    models:\n      - claude-3-7-sonnet\n",
-			wantErr: "providers[0].base_url is required",
+			wantErr:     "providers[0].base_url is required",
 		},
 		{
-			name: "missing models",
+			name:        "missing models",
 			yamlContent: "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: claude-primary\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n",
-			wantErr: "providers[0].models must contain at least one model",
+			wantErr:     "providers[0].models must contain at least one model",
 		},
 	}
 
@@ -227,6 +227,18 @@ func TestValidate_UnsupportedProviderValue(t *testing.T) {
 		t.Fatal("expected validation error for unsupported provider")
 	}
 	if !strings.Contains(err.Error(), "providers[0].provider must be one of [claude openai]") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidate_DuplicateProviderIDs(t *testing.T) {
+	t.Parallel()
+
+	_, err := loadConfig(t, "host: 127.0.0.1\nport: 8317\napi_keys:\n  - down-key-1\nproviders:\n  - id: provider-1\n    provider: claude\n    api_key: up-key-1\n    base_url: https://api.anthropic.com\n    models:\n      - claude-3-7-sonnet\n  - id: \" provider-1 \"\n    provider: openai\n    api_key: up-key-2\n    base_url: https://api.openai.com\n    models:\n      - gpt-4o-mini\n")
+	if err == nil {
+		t.Fatal("expected validation error for duplicate provider ids")
+	}
+	if !strings.Contains(err.Error(), `providers[1].id "provider-1" duplicates providers[0].id`) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

@@ -92,11 +92,16 @@ func validateConfig(cfg *Config) error {
 	if len(cfg.Providers) == 0 {
 		return fmt.Errorf("providers must contain at least one provider")
 	}
+	seenProviderIDs := make(map[string]int, len(cfg.Providers))
 	for i, provider := range cfg.Providers {
 		prefix := fmt.Sprintf("providers[%d]", i)
 		if provider.ID == "" {
 			return fmt.Errorf("%s.id is required", prefix)
 		}
+		if previousIndex, exists := seenProviderIDs[provider.ID]; exists {
+			return fmt.Errorf("%s.id %q duplicates providers[%d].id", prefix, provider.ID, previousIndex)
+		}
+		seenProviderIDs[provider.ID] = i
 		if provider.Provider == "" {
 			return fmt.Errorf("%s.provider is required", prefix)
 		}
